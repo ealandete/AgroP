@@ -778,3 +778,17 @@ class TelegramConfig(BaseModel):
 class DispararWebhookRequest(BaseModel):
     evento: str
     datos: Optional[dict] = None
+
+
+class EmailConfig(BaseModel):
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    from_email: str = ""
+
+
+class WhatsAppConfig(BaseModel):
+    api_url: str = ""
+    api_key: str = ""
+    phone_number: str = ""

@@ -11,6 +11,7 @@ import {
   IconActivity, IconFileDownload, IconEgg, IconBug,
   IconUsers, IconUsersGroup, IconHealthRecognition, IconCalendarEvent, IconClipboardList,
   IconBuildingEstate, IconCheck, IconReportAnalytics, IconFileSpreadsheet,
+  IconSearch,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import api from '../services/api.js'
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { label: 'Inventario', icon: IconPackage, to: '/inventario', section: 'gestion' },
   { label: 'Trabajadores', icon: IconUsers, to: '/trabajadores', section: 'gestion' },
   { label: 'SST', icon: IconHealthRecognition, to: '/sst', section: 'gestion' },
+  { label: 'Trazabilidad', icon: IconSearch, to: '/trazabilidad', section: 'gestion' },
   { label: 'Estadísticas', icon: IconChartBar, to: '/estadisticas', section: 'analisis' },
   { label: 'Reportes', icon: IconFileDownload, to: '/exportar', section: 'analisis' },
   { label: 'Admin Sistema', icon: IconSettings, to: '/admin-sistema', section: 'sistema' },
@@ -65,6 +67,7 @@ const ROUTE_NAMES = {
   '/admin-sistema': 'Admin Sistema',
   '/configuracion': 'Configuración',
   '/finanzas': 'Finanzas',
+  '/trazabilidad': 'Trazabilidad',
   '/ficha-animal': 'Ficha Animal',
   '/cultivos/ficha': 'Ficha Cultivo',
 }

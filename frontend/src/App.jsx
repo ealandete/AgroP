@@ -31,6 +31,7 @@ import Consolidado from './pages/Consolidado.jsx'
 import AdminSistema from './pages/AdminSistema.jsx'
 import Alertas from './pages/Alertas.jsx'
 import Plantillas from './pages/Plantillas.jsx'
+import Trazabilidad from './pages/Trazabilidad.jsx'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth()
@@ -73,6 +74,7 @@ export default function App() {
           <Route path="admin-sistema" element={<AdminSistema />} />
           <Route path="plantillas" element={<Plantillas />} />
           <Route path="alertas" element={<Alertas />} />
+          <Route path="trazabilidad" element={<Trazabilidad />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

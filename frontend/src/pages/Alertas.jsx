@@ -9,7 +9,7 @@ import { notifications } from '@mantine/notifications'
 import {
   IconBell, IconAlertTriangle, IconCheck, IconEye,
   IconSend, IconPlus, IconEdit, IconTrash, IconRefresh,
-  IconBrandTelegram, IconCircleFilled,
+  IconBrandTelegram, IconCircleFilled, IconMail, IconBrandWhatsapp,
 } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import api from '../services/api.js'
@@ -244,6 +244,171 @@ function TabTelegram() {
   )
 }
 
+function TabEmail() {
+  const [config, setConfig] = useState({
+    smtp_host: '', smtp_port: 587, smtp_user: '',
+    smtp_password: '', from_email: '',
+  })
+  const [enviando, setEnviando] = useState(false)
+
+  useEffect(() => {
+    api.get('/alertas/config-email').then(r => {
+      const d = r.data
+      setConfig({
+        smtp_host: d.smtp_host || '',
+        smtp_port: d.smtp_port || 587,
+        smtp_user: d.smtp_user || '',
+        smtp_password: d.smtp_password || '',
+        from_email: d.from_email || '',
+      })
+    }).catch(() => {})
+  }, [])
+
+  const guardarConfig = async () => {
+    try {
+      await api.put('/alertas/config-email', config)
+      notifications.show({ title: 'Configuracion guardada', color: 'green' })
+    } catch (err) {
+      notifications.show({ title: 'Error', message: err.response?.data?.detail || 'Error al guardar', color: 'red' })
+    }
+  }
+
+  const enviarAlertas = async () => {
+    setEnviando(true)
+    try {
+      await guardarConfig()
+      const r = await api.post('/alertas/notificar-email')
+      notifications.show({ title: 'Enviado', message: r.data.mensaje, color: 'green' })
+    } catch (err) {
+      notifications.show({ title: 'Error', message: err.response?.data?.detail || 'Error al enviar', color: 'red' })
+    }
+    setEnviando(false)
+  }
+
+  return (
+    <Stack>
+      <Title order={4}>Configuracion de Email (SMTP)</Title>
+      <Paper withBorder p="md">
+        <Stack>
+          <TextInput
+            label="SMTP Host"
+            description="Ej: smtp.gmail.com"
+            value={config.smtp_host}
+            onChange={e => setConfig({ ...config, smtp_host: e.target.value })}
+          />
+          <TextInput
+            label="SMTP Port"
+            description="Usualmente 587 (TLS) o 465 (SSL)"
+            value={config.smtp_port}
+            onChange={e => setConfig({ ...config, smtp_port: parseInt(e.target.value) || 587 })}
+          />
+          <TextInput
+            label="Usuario"
+            description="Correo electronico o nombre de usuario"
+            value={config.smtp_user}
+            onChange={e => setConfig({ ...config, smtp_user: e.target.value })}
+          />
+          <PasswordInput
+            label="Contrasena"
+            description="Contrasena de aplicacion o token"
+            value={config.smtp_password}
+            onChange={e => setConfig({ ...config, smtp_password: e.target.value })}
+          />
+          <TextInput
+            label="Correo From"
+            description="Direccion de envio"
+            value={config.from_email}
+            onChange={e => setConfig({ ...config, from_email: e.target.value })}
+          />
+          <Group>
+            <Button onClick={guardarConfig} variant="light" leftSection={<IconCheck size={16} />}>
+              Guardar Configuracion
+            </Button>
+            <Button onClick={enviarAlertas} loading={enviando} leftSection={<IconSend size={16} />}>
+              Enviar Alertas por Email
+            </Button>
+          </Group>
+        </Stack>
+      </Paper>
+    </Stack>
+  )
+}
+
+function TabWhatsApp() {
+  const [config, setConfig] = useState({
+    api_url: '', api_key: '', phone_number: '',
+  })
+  const [enviando, setEnviando] = useState(false)
+
+  useEffect(() => {
+    api.get('/alertas/config-whatsapp').then(r => {
+      const d = r.data
+      setConfig({
+        api_url: d.api_url || '',
+        api_key: d.api_key || '',
+        phone_number: d.phone_number || '',
+      })
+    }).catch(() => {})
+  }, [])
+
+  const guardarConfig = async () => {
+    try {
+      await api.put('/alertas/config-whatsapp', config)
+      notifications.show({ title: 'Configuracion guardada', color: 'green' })
+    } catch (err) {
+      notifications.show({ title: 'Error', message: err.response?.data?.detail || 'Error al guardar', color: 'red' })
+    }
+  }
+
+  const enviarAlertas = async () => {
+    setEnviando(true)
+    try {
+      await guardarConfig()
+      const r = await api.post('/alertas/notificar-telegram')
+      notifications.show({ title: 'Enviado', message: 'WhatsApp configurado. Use la API externa para enviar.', color: 'green' })
+    } catch (err) {
+      notifications.show({ title: 'Error', message: err.response?.data?.detail || 'Error al enviar', color: 'red' })
+    }
+    setEnviando(false)
+  }
+
+  return (
+    <Stack>
+      <Title order={4}>Configuracion de WhatsApp API</Title>
+      <Paper withBorder p="md">
+        <Stack>
+          <TextInput
+            label="API URL"
+            description="URL de la API de WhatsApp (Ej: https://api.whatsapp.com/send)"
+            value={config.api_url}
+            onChange={e => setConfig({ ...config, api_url: e.target.value })}
+          />
+          <PasswordInput
+            label="API Key"
+            description="Token o clave de la API"
+            value={config.api_key}
+            onChange={e => setConfig({ ...config, api_key: e.target.value })}
+          />
+          <TextInput
+            label="Numero de telefono"
+            description="Numero registrado en la API (con codigo de pais)"
+            value={config.phone_number}
+            onChange={e => setConfig({ ...config, phone_number: e.target.value })}
+          />
+          <Group>
+            <Button onClick={guardarConfig} variant="light" leftSection={<IconCheck size={16} />}>
+              Guardar Configuracion
+            </Button>
+            <Button onClick={enviarAlertas} loading={enviando} leftSection={<IconSend size={16} />}>
+              Enviar Alertas por WhatsApp
+            </Button>
+          </Group>
+        </Stack>
+      </Paper>
+    </Stack>
+  )
+}
+
 function TabWebhooks() {
   const [webhooks, setWebhooks] = useState([])
   const [opened, { open, close }] = useDisclosure(false)
@@ -377,6 +542,23 @@ export default function Alertas() {
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState({ tipo: '', severidad: '', leida: '', resuelta: '' })
+  const [channels, setChannels] = useState({ telegram: false, email: false, whatsapp: false })
+
+  useEffect(() => {
+    const loadChannels = async () => {
+      try {
+        const tg = await api.get('/alertas/config-telegram')
+        const em = await api.get('/alertas/config-email')
+        const wa = await api.get('/alertas/config-whatsapp')
+        setChannels({
+          telegram: !!(tg.data.bot_token && tg.data.chat_id),
+          email: !!(em.data.smtp_host && em.data.from_email),
+          whatsapp: !!(wa.data.api_url && wa.data.phone_number),
+        })
+      } catch {}
+    }
+    loadChannels()
+  }, [])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -460,12 +642,50 @@ export default function Alertas() {
         </Paper>
       </SimpleGrid>
 
+      <SimpleGrid cols={{ base: 1, sm: 3 }}>
+        <Paper p="sm" radius="md" withBorder>
+          <Group>
+            <IconBrandTelegram size={24} color={channels.telegram ? 'var(--mantine-color-blue-6)' : 'gray'} />
+            <div>
+              <Text size="xs" c="dimmed">Telegram</Text>
+              <Badge color={channels.telegram ? 'green' : 'gray'} size="sm" variant="light">
+                {channels.telegram ? 'Configurado' : 'No configurado'}
+              </Badge>
+            </div>
+          </Group>
+        </Paper>
+        <Paper p="sm" radius="md" withBorder>
+          <Group>
+            <IconMail size={24} color={channels.email ? 'var(--mantine-color-blue-6)' : 'gray'} />
+            <div>
+              <Text size="xs" c="dimmed">Email</Text>
+              <Badge color={channels.email ? 'green' : 'gray'} size="sm" variant="light">
+                {channels.email ? 'Configurado' : 'No configurado'}
+              </Badge>
+            </div>
+          </Group>
+        </Paper>
+        <Paper p="sm" radius="md" withBorder>
+          <Group>
+            <IconBrandWhatsapp size={24} color={channels.whatsapp ? 'var(--mantine-color-green-6)' : 'gray'} />
+            <div>
+              <Text size="xs" c="dimmed">WhatsApp</Text>
+              <Badge color={channels.whatsapp ? 'green' : 'gray'} size="sm" variant="light">
+                {channels.whatsapp ? 'Configurado' : 'No configurado'}
+              </Badge>
+            </div>
+          </Group>
+        </Paper>
+      </SimpleGrid>
+
       <Tabs defaultValue="alertas">
         <Tabs.List>
           <Tabs.Tab value="alertas" leftSection={<IconBell size={16} />}>
             Alertas {sinLeer > 0 && <Badge size="xs" ml={4}>{sinLeer}</Badge>}
           </Tabs.Tab>
           <Tabs.Tab value="telegram" leftSection={<IconBrandTelegram size={16} />}>Telegram</Tabs.Tab>
+          <Tabs.Tab value="email" leftSection={<IconMail size={16} />}>Email</Tabs.Tab>
+          <Tabs.Tab value="whatsapp" leftSection={<IconBrandWhatsapp size={16} />}>WhatsApp</Tabs.Tab>
           <Tabs.Tab value="webhooks" leftSection={<IconSend size={16} />}>Webhooks</Tabs.Tab>
         </Tabs.List>
 
@@ -474,6 +694,8 @@ export default function Alertas() {
             handleLeer={handleLeer} handleResolver={handleResolver} handleGenerar={handleGenerar} />
         </Tabs.Panel>
         <Tabs.Panel value="telegram" pt="md"><TabTelegram /></Tabs.Panel>
+        <Tabs.Panel value="email" pt="md"><TabEmail /></Tabs.Panel>
+        <Tabs.Panel value="whatsapp" pt="md"><TabWhatsApp /></Tabs.Panel>
         <Tabs.Panel value="webhooks" pt="md"><TabWebhooks /></Tabs.Panel>
       </Tabs>
     </Stack>

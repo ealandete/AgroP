@@ -19,12 +19,79 @@ from app.routers.sistema import router as sistema_router
 from app.routers.alertas import router as alertas_router
 from app.routers.templates import router as templates_router
 from app.routers.vigilancia import router as vigilancia_router
+from app.routers.trazabilidad import router as trazabilidad_router
+
+tags_metadata = [
+    {"name": "Autenticacion", "description": "Login, registro, tokens"},
+    {"name": "Animales", "description": "Gestion de ganado y especies"},
+    {"name": "Cultivos", "description": "Gestion de siembras y cosechas"},
+    {"name": "Lotes", "description": "Gestion de terrenos y mapas"},
+    {"name": "Contabilidad", "description": "Facturacion, costos, ventas"},
+    {"name": "Planeacion", "description": "Cronograma de actividades"},
+    {"name": "Alertas", "description": "Notificaciones y webhooks"},
+    {"name": "Exportar", "description": "PDF, Excel, CSV"},
+    {"name": "Sistema", "description": "Usuarios, roles, diagnostico"},
+]
 
 app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
+    title="AgroP API - Sistema de Gestion Agropecuaria",
+    description="""
+# AgroP API
+
+Sistema de gestion agropecuaria para la administracion de fincas, ganado,
+cultivos, insumos, contabilidad y trazabilidad.
+
+## Autenticacion
+
+Usa JWT (Bearer token). Obtenga su token via `POST /api/auth/login`.
+
+```
+curl -X POST /api/auth/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"email":"admin@agrop.com","password":"secreto"}'
+```
+
+Use el token en todas las solicitudes:
+
+```
+curl -H "Authorization: Bearer <token>" /api/animales/
+```
+
+## Modulos disponibles
+
+- **Autenticacion** - Login, registro, gestion de tokens
+- **Animales** - CRUD de animales, eventos, sanidad, pesajes, reproduccion
+- **Cultivos** - Siembras, cosechas, tratamientos, labores de campo
+- **Lotes** - Gestion de terrenos, mapas interactivos, analisis de suelo
+- **Contabilidad** - Facturacion electronica, costos, ventas, nominas
+- **Planeacion** - Plan de actividades, presupuestos
+- **Alertas** - Notificaciones, webhooks, Telegram, Email, WhatsApp
+- **Trazabilidad** - Trazabilidad completa de animales, cultivos y productos
+- **Exportar** - Exportacion a PDF, Excel, CSV
+- **Sistema** - Usuarios, roles, configuracion, diagnostico
+
+## Rate Limiting
+
+Actualmente no hay limite de tasa implementado.
+
+## Contacto
+
+Soporte: soporte@agrop.com
+    """,
+    version="2.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
+    contact={
+        "name": "Equipo AgroP",
+        "email": "soporte@agrop.com",
+        "url": "https://agrop.com",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT",
+    },
+    terms_of_service="https://agrop.com/terminos",
+    openapi_tags=tags_metadata,
 )
 
 app.add_middleware(
@@ -58,6 +125,7 @@ app.include_router(sistema_router)
 app.include_router(alertas_router)
 app.include_router(templates_router)
 app.include_router(vigilancia_router)
+app.include_router(trazabilidad_router)
 
 
 @app.get("/api/health")

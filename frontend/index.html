@@ -4,9 +4,33 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2e7d32" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="AgroP" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <title>AgroP - Gestión Agropecuaria</title>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js', { scope: '/', updateViaCache: 'none' }).then((reg) => {
+            reg.addEventListener('updatefound', () => {
+              const installing = reg.installing;
+              if (installing) {
+                installing.addEventListener('statechange', () => {
+                  if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('New version available');
+                  }
+                });
+              }
+            });
+          }).catch((err) => console.error('SW registration error:', err));
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

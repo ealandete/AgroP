@@ -11,10 +11,13 @@ from app.models import (
 )
 from app.schemas import (
     AlertOut, WebhookConfigOut, WebhookConfigCreate, WebhookConfigUpdate,
-    TelegramConfig, DispararWebhookRequest,
+    TelegramConfig, EmailConfig, WhatsAppConfig, DispararWebhookRequest,
 )
 from app.utils.auth import get_current_user
 import httpx
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 router = APIRouter(prefix="/api/alertas", tags=["Alertas"])
 
@@ -305,6 +308,129 @@ def update_config_telegram(
             existing.valor = valor
         else:
             db.add(Parametro(clave=clave, valor=valor, tipo="string", descripcion=f"Telegram {clave}"))
+    db.commit()
+    return payload
+
+
+@router.post("/notificar-email")
+def notificar_email(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    host = db.query(Parametro).filter(Parametro.clave == "smtp_host").first()
+    port = db.query(Parametro).filter(Parametro.clave == "smtp_port").first()
+    user = db.query(Parametro).filter(Parametro.clave == "smtp_user").first()
+    password = db.query(Parametro).filter(Parametro.clave == "smtp_password").first()
+    from_email = db.query(Parametro).filter(Parametro.clave == "smtp_from_email").first()
+
+    if not host or not host.valor:
+        raise HTTPException(status_code=400, detail="SMTP host no configurado")
+
+    alerts = db.query(Alert).filter(Alert.resuelta == False).order_by(Alert.created_at.desc()).limit(20).all()
+    if not alerts:
+        return {"mensaje": "No hay alertas pendientes"}
+
+    html = "<h2>Alertas AgroP - Pendientes</h2><table border='1' cellpadding='6' style='border-collapse:collapse'>"
+    html += "<tr><th>Severidad</th><th>Titulo</th><th>Descripcion</th><th>Fecha</th></tr>"
+    severity_colors = {"critica": "red", "alta": "orange", "media": "#f0ad4e", "baja": "gray"}
+    for a in alerts:
+        color = severity_colors.get(a.severidad, "gray")
+        html += f"<tr><td style='color:{color}'><b>{a.severidad}</b></td><td>{a.titulo}</td><td>{a.descripcion or ''}</td><td>{a.created_at.strftime('%d/%m/%Y %H:%M') if a.created_at else ''}</td></tr>"
+    html += "</table><p>Total: " + str(len(alerts)) + " pendiente(s)</p>"
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"AgroP Alertas - {len(alerts)} pendiente(s)"
+    msg["From"] = from_email.valor if from_email and from_email.valor else "noreply@agrop.com"
+    msg["To"] = current_user.email
+    msg.attach(MIMEText(html, "html"))
+
+    try:
+        smtp_port = int(port.valor) if port and port.valor else 587
+        with smtplib.SMTP(host.valor, smtp_port, timeout=15) as server:
+            server.starttls()
+            if user and user.valor and password and password.valor:
+                server.login(user.valor, password.valor)
+            server.send_message(msg)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Error sending email: {str(e)}")
+
+    return {"mensaje": "Correo enviado correctamente", "total": len(alerts)}
+
+
+@router.get("/config-email", response_model=EmailConfig)
+def get_config_email(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    def _get(clave):
+        p = db.query(Parametro).filter(Parametro.clave == clave).first()
+        return p.valor if p else ""
+
+    return EmailConfig(
+        smtp_host=_get("smtp_host"),
+        smtp_port=int(_get("smtp_port") or "587"),
+        smtp_user=_get("smtp_user"),
+        smtp_password=_get("smtp_password"),
+        from_email=_get("smtp_from_email"),
+    )
+
+
+@router.put("/config-email", response_model=EmailConfig)
+def update_config_email(
+    payload: EmailConfig,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    configs = [
+        ("smtp_host", payload.smtp_host),
+        ("smtp_port", str(payload.smtp_port)),
+        ("smtp_user", payload.smtp_user),
+        ("smtp_password", payload.smtp_password),
+        ("smtp_from_email", payload.from_email),
+    ]
+    for clave, valor in configs:
+        existing = db.query(Parametro).filter(Parametro.clave == clave).first()
+        if existing:
+            existing.valor = valor
+        else:
+            db.add(Parametro(clave=clave, valor=valor, tipo="string", descripcion=f"Email {clave}"))
+    db.commit()
+    return payload
+
+
+@router.get("/config-whatsapp", response_model=WhatsAppConfig)
+def get_config_whatsapp(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    def _get(clave):
+        p = db.query(Parametro).filter(Parametro.clave == clave).first()
+        return p.valor if p else ""
+
+    return WhatsAppConfig(
+        api_url=_get("whatsapp_api_url"),
+        api_key=_get("whatsapp_api_key"),
+        phone_number=_get("whatsapp_phone_number"),
+    )
+
+
+@router.put("/config-whatsapp", response_model=WhatsAppConfig)
+def update_config_whatsapp(
+    payload: WhatsAppConfig,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    configs = [
+        ("whatsapp_api_url", payload.api_url),
+        ("whatsapp_api_key", payload.api_key),
+        ("whatsapp_phone_number", payload.phone_number),
+    ]
+    for clave, valor in configs:
+        existing = db.query(Parametro).filter(Parametro.clave == clave).first()
+        if existing:
+            existing.valor = valor
+        else:
+            db.add(Parametro(clave=clave, valor=valor, tipo="string", descripcion=f"WhatsApp {clave}"))
     db.commit()
     return payload
 
