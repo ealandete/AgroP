@@ -4,7 +4,8 @@ import {
   Paper, Table, Title, Group, Button, Modal, TextInput,
   Select, MultiSelect, NumberInput, Textarea, Badge, ActionIcon,
   Stack, SimpleGrid, Text, Progress, SegmentedControl, Tooltip,
-  Divider, Card, ActionIconGroup, Collapse,
+  Divider, Card, ActionIconGroup, Collapse, ScrollArea, Box,
+  Center,
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
@@ -13,12 +14,15 @@ import {
   IconAlertTriangle, IconTemplate, IconTable,
   IconChevronLeft, IconChevronRight, IconCircle,
   IconClock, IconCircleFilled, IconCalendarEvent,
+  IconUser, IconGripVertical, IconCalendarDue,
 } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
+import isoWeek from 'dayjs/plugin/isoWeek'
 import api from '../services/api.js'
 
 dayjs.extend(isBetween)
+dayjs.extend(isoWeek)
 
 const toArray = (str) => (str ? String(str).split(',').map(s => s.trim()).filter(Boolean) : [])
 const toCSV = (arr) => (arr || []).filter(Boolean).join(',')
@@ -75,6 +79,13 @@ const tipoIcon = {
   poda: '✂️', fertilizacion: '🧪', riego: '💧',
 }
 
+const ganttColor = {
+  vacunacion: '#228be6', desparasitacion: '#15aabf', pesaje: '#40c057',
+  siembra: '#fab005', cosecha: '#fd7e14', rotacion: '#7950f2',
+  inseminacion: '#e64980', parto: '#fa5252', marcacion: '#868e96',
+  poda: '#82c91e', fertilizacion: '#4c6ef5', riego: '#22b8cf',
+}
+
 const PLANTILLAS = [
   {
     value: 'vacunacion_aftosa', label: 'Vacunación Aftosa', icon: '💉',
@@ -124,6 +135,7 @@ const PLANTILLAS = [
 ]
 
 const WEEKDAYS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 
 const DENSITY_COLORS = {
   0: 'transparent',
@@ -146,6 +158,202 @@ const densityLevel = (count) => {
   return 3
 }
 
+const BAR_HEIGHT = 28
+const BAR_GAP = 4
+const COL_WIDTH = 40
+const LABEL_WIDTH = 220
+const HEADER_HEIGHT = 60
+
+function WeekGrid({ start, days, ganttEnd }) {
+  const weeks = []
+  let cursor = dayjs(start)
+  while (cursor.isBefore(ganttEnd) || cursor.isSame(ganttEnd, 'day')) {
+    const weekEnd = cursor.add(6, 'day')
+    weeks.push({ start: cursor, end: weekEnd, label: `W${cursor.isoWeek()}` })
+    cursor = cursor.add(7, 'day')
+  }
+  return (
+    <Box style={{ display: 'flex', position: 'sticky', top: 0, zIndex: 2, background: '#fff' }}>
+      {weeks.map((w, i) => (
+        <Box
+          key={i}
+          style={{
+            width: COL_WIDTH * 7,
+            minWidth: COL_WIDTH * 7,
+            borderRight: '1px solid #dee2e6',
+            borderBottom: '2px solid #dee2e6',
+            padding: 2,
+          }}
+        >
+          <Text size="xs" ta="center" fw={600} c="dimmed">
+            {w.start.format('MMM')} {w.start.date()}-{w.end.date()}
+          </Text>
+          <Text size="xs" ta="center" c="gray.5">{w.label}</Text>
+        </Box>
+      ))}
+    </Box>
+  )
+}
+
+function DayGrid({ start, totalDays }) {
+  const cells = []
+  for (let i = 0; i < totalDays; i++) {
+    const d = dayjs(start).add(i, 'day')
+    cells.push(
+      <Box
+        key={i}
+        style={{
+          width: COL_WIDTH,
+          minWidth: COL_WIDTH,
+          borderRight: '1px solid #f0f0f0',
+          borderBottom: '1px solid #e9ecef',
+          textAlign: 'center',
+          fontSize: 10,
+          color: d.day() === 0 || d.day() === 6 ? '#adb5bd' : '#868e96',
+          background: d.day() === 0 || d.day() === 6 ? '#f8f9fa' : undefined,
+        }}
+      >
+        {d.date()}
+      </Box>
+    )
+  }
+  return (
+    <Box style={{ display: 'flex', position: 'sticky', top: 42, zIndex: 1, background: '#fff' }}>
+      {cells}
+    </Box>
+  )
+}
+
+function getActivityEnd(a) {
+  if (a.fecha_ejecucion) return dayjs(a.fecha_ejecucion)
+  if (a.duracion_estimada) return dayjs(a.fecha_programada).add(a.duracion_estimada, 'day')
+  return dayjs(a.fecha_programada).add(1, 'day')
+}
+
+function GanttBar({ activity, startDay, ganttStart, ganttEnd, onClick }) {
+  const aStart = dayjs(activity.fecha_programada)
+  const aEnd = getActivityEnd(activity)
+
+  const clampedStart = aStart.isBefore(ganttStart) ? dayjs(ganttStart) : aStart
+  const clampedEnd = aEnd.isAfter(ganttEnd) ? dayjs(ganttEnd) : aEnd
+
+  const left = clampedStart.diff(ganttStart, 'day') * COL_WIDTH
+  const width = Math.max(clampedEnd.diff(clampedStart, 'day') * COL_WIDTH, COL_WIDTH * 0.5)
+
+  const color = ganttColor[activity.tipo_actividad] || '#868e96'
+  const isPast = dayjs().isAfter(aEnd)
+  const isActive = activity.estado === 'en_curso'
+  const isCompleted = activity.estado === 'completado'
+  const opacity = isCompleted ? 0.5 : isPast && activity.estado !== 'completado' ? 0.8 : 1
+
+  return (
+    <Tooltip
+      label={`${activity.titulo} (${activity.fecha_programada} - ${aEnd.format('YYYY-MM-DD')})`}
+      withArrow
+      withinPortal
+    >
+      <Box
+        onClick={() => onClick?.(activity)}
+        style={{
+          position: 'absolute',
+          left,
+          width,
+          top: 2,
+          height: BAR_HEIGHT - 4,
+          borderRadius: 4,
+          background: color,
+          opacity,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          paddingLeft: 4,
+          paddingRight: 4,
+          overflow: 'hidden',
+          border: isActive ? `2px solid ${color}` : undefined,
+          boxShadow: isActive ? `0 0 0 1px ${color}` : undefined,
+          zIndex: isActive ? 1 : 0,
+        }}
+      >
+        {width > 60 && (
+          <Text size="xs" c="white" truncate style={{ fontSize: 11, fontWeight: 500 }}>
+            {activity.titulo}
+          </Text>
+        )}
+        {isCompleted && <IconCheck size={10} color="white" style={{ marginLeft: 'auto' }} />}
+      </Box>
+    </Tooltip>
+  )
+}
+
+function MonthMiniCalendar({ month, year, activitiesByDate, onClickMonth }) {
+  const firstDay = dayjs(new Date(year, month, 1))
+  const daysInMonth = firstDay.daysInMonth()
+  const startDay = firstDay.day()
+  const days = []
+  for (let i = 0; i < startDay; i++) days.push(null)
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = firstDay.date(d).format('YYYY-MM-DD')
+    days.push({ day: d, date: dateStr, activities: activitiesByDate[dateStr] || [] })
+  }
+
+  return (
+    <Paper
+      p="xs"
+      radius="md"
+      withBorder
+      style={{ cursor: 'pointer' }}
+      onClick={() => onClickMonth?.(month)}
+    >
+      <Text ta="center" fw={600} size="sm" mb={4}>{MONTHS[month]}</Text>
+      <SimpleGrid cols={7} spacing={1}>
+        {WEEKDAYS.map(d => (
+          <Text key={d} size="xs" ta="center" c="dimmed" style={{ fontSize: 8 }}>{d}</Text>
+        ))}
+        {days.map((day, i) => (
+          <Box key={i} style={{ height: 16, textAlign: 'center' }}>
+            {day && (
+              <Tooltip
+                label={`${day.date}: ${day.activities.length} actividades`}
+                withArrow
+              >
+                <Text
+                  size="xs"
+                  style={{
+                    fontSize: 9,
+                    color: day.activities.length > 0 ? '#228be6' : '#adb5bd',
+                    fontWeight: day.activities.length > 0 ? 600 : 400,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {day.day}
+                </Text>
+              </Tooltip>
+            )}
+          </Box>
+        ))}
+      </SimpleGrid>
+      {days.some(d => d && d.activities.length > 0) && (
+        <Group justify="center" gap={2} mt={4}>
+          {[1, 2, 3].map(level => {
+            const count = days.filter(d => d && densityLevel(d.activities.length) === level).length
+            if (!count) return null
+            return (
+              <Tooltip key={level} label={`${count} días con ${level === 1 ? '1' : level === 2 ? '2-3' : '4+'} actividades`}>
+                <Box
+                  style={{
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: `var(--mantine-color-${level >= 3 ? 'red' : level >= 2 ? 'orange' : 'teal'}-${level >= 3 ? 7 : level >= 2 ? 6 : 5})`,
+                  }}
+                />
+              </Tooltip>
+            )
+          })}
+        </Group>
+      )}
+    </Paper>
+  )
+}
+
 export default function Planeacion() {
   const [searchParams] = useSearchParams()
   const [data, setData] = useState([])
@@ -163,6 +371,7 @@ export default function Planeacion() {
   const [indicadores, setIndicadores] = useState(null)
   const [viewMode, setViewMode] = useState('table')
   const [calendarDate, setCalendarDate] = useState(dayjs())
+  const [calendarSubView, setCalendarSubView] = useState('month')
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [showProximas, setShowProximas] = useState(true)
 
@@ -270,14 +479,33 @@ export default function Planeacion() {
 
   const proximasActividades = useMemo(() => {
     const today = dayjs().startOf('day')
-    const sevenDays = today.add(7, 'day')
+    const thirtyDays = today.add(30, 'day')
     return data.filter(a => {
       if (a.estado === 'completado' || a.estado === 'cancelado') return false
       if (!a.fecha_programada) return false
       const d = dayjs(a.fecha_programada)
-      return d.isBetween(today.subtract(1, 'day'), sevenDays, 'day', '[]')
+      return d.isBetween(today.subtract(1, 'day'), thirtyDays, 'day', '[]')
     }).sort((a, b) => dayjs(a.fecha_programada).unix() - dayjs(b.fecha_programada).unix())
   }, [data])
+
+  const proximasAgrupadas = useMemo(() => {
+    const today = dayjs().startOf('day')
+    const groups = { 1: [], 2: [], 3: [], 4: [] }
+    proximasActividades.forEach(a => {
+      const d = dayjs(a.fecha_programada)
+      const diff = d.diff(today, 'day')
+      const weekIdx = Math.min(Math.floor(diff / 7) + 1, 4)
+      groups[weekIdx].push(a)
+    })
+    return groups
+  }, [proximasActividades])
+
+  const weekLabels = {
+    1: 'Esta semana',
+    2: 'Semana 2',
+    3: 'Semana 3',
+    4: 'Semana 4',
+  }
 
   const calendarActivities = useMemo(() => {
     const map = {}
@@ -306,6 +534,50 @@ export default function Planeacion() {
     }
     return days
   }, [calendarDate, calendarActivities])
+
+  const yearActivities = useMemo(() => {
+    const map = {}
+    data.forEach(a => {
+      if (!a.fecha_programada) return
+      const key = a.fecha_programada
+      if (!map[key]) map[key] = []
+      map[key].push(a)
+    })
+    return map
+  }, [data])
+
+  const ganttData = useMemo(() => {
+    const active = filteredData.filter(a => a.estado !== 'cancelado' && a.fecha_programada)
+    if (active.length === 0) return { items: [], start: dayjs(), end: dayjs().add(30, 'day'), totalDays: 30 }
+
+    let minDate = dayjs(active[0].fecha_programada)
+    let maxDate = dayjs(active[0].fecha_programada)
+
+    active.forEach(a => {
+      const s = dayjs(a.fecha_programada)
+      const e = getActivityEnd(a)
+      if (s.isBefore(minDate)) minDate = s
+      if (e.isAfter(maxDate)) maxDate = e
+    })
+
+    const ganttStart = minDate.startOf('week').subtract(1, 'week')
+    const ganttEnd = maxDate.endOf('week').add(1, 'week')
+    const totalDays = ganttEnd.diff(ganttStart, 'day')
+
+    return { items: active, start: ganttStart, end: ganttEnd, totalDays }
+  }, [filteredData])
+
+  const ganttMonths = useMemo(() => {
+    const months = []
+    let cursor = dayjs(ganttData.start)
+    while (cursor.isBefore(ganttData.end)) {
+      const monthStart = cursor
+      const monthEnd = cursor.endOf('month')
+      months.push({ start: monthStart, end: monthEnd, label: MONTHS[monthStart.month()], year: monthStart.year() })
+      cursor = monthEnd.add(1, 'day')
+    }
+    return months
+  }, [ganttData])
 
   const handleSubmit = async () => {
     const payload = { ...form }
@@ -426,12 +698,20 @@ export default function Planeacion() {
   const isPastDue = (dateStr, estado) =>
     estado !== 'completado' && estado !== 'cancelado' && dayjs(dateStr).isBefore(dayjs(), 'day')
 
+  const handleGanttClick = (a) => handleEdit(a)
+
+  const daysRemaining = (dateStr) => {
+    const d = dayjs(dateStr)
+    const today = dayjs().startOf('day')
+    return d.diff(today, 'day')
+  }
+
   return (
     <Stack>
       <Group justify="space-between">
         <Title order={3}>Planeación y Cronograma de Actividades</Title>
         <Group>
-          {viewMode === 'calendar' && (
+          {viewMode === 'calendar' && calendarSubView === 'month' && (
             <Button
               variant="default"
               leftSection={<IconChevronLeft size={16} />}
@@ -448,8 +728,8 @@ export default function Planeacion() {
         <Paper p="md" radius="md" withBorder>
           <Group justify="space-between" mb="sm">
             <Group>
-              <IconClock size={20} color="var(--mantine-color-orange-6)" />
-              <Text fw={600}>Próximos 7 días</Text>
+              <IconCalendarDue size={20} color="var(--mantine-color-orange-6)" />
+              <Text fw={600}>Próximos 30 días</Text>
               <Badge color="orange" size="lg">{proximasActividades.length} actividades</Badge>
             </Group>
             <Button
@@ -460,28 +740,62 @@ export default function Planeacion() {
             </Button>
           </Group>
           <Collapse in={showProximas}>
-            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="sm">
-              {proximasActividades.slice(0, 9).map(a => {
-                const vencida = isPastDue(a.fecha_programada, a.estado)
+            <Stack gap="md">
+              {[1, 2, 3, 4].map(weekNum => {
+                const items = proximasAgrupadas[weekNum]
+                if (!items || items.length === 0) return null
+                const isCurrentWeek = weekNum === 1
                 return (
-                  <Paper key={a.id} p="xs" radius="sm" withBorder
-                    style={{ borderLeft: `4px solid var(--mantine-color-${vencida ? 'red' : prioridadColor[a.prioridad] || 'blue'}-6)` }}
-                  >
-                    <Group justify="space-between" mb={2}>
-                      <Text size="xs" c="dimmed">
-                        {tipoIcon[a.tipo_actividad] || ''} {formatDate(a.fecha_programada)}
-                      </Text>
-                      <Badge color={estadoColor[a.estado] || 'blue'} size="xs" variant="light">{a.estado}</Badge>
+                  <Box key={weekNum}>
+                    <Group mb="xs">
+                      <Badge
+                        color={isCurrentWeek ? 'blue' : 'gray'}
+                        variant={isCurrentWeek ? 'filled' : 'outline'}
+                        size="sm"
+                      >
+                        {weekLabels[weekNum]}
+                      </Badge>
+                      <Text size="xs" c="dimmed">{items.length} actividad(es)</Text>
                     </Group>
-                    <Text size="sm" fw={500} lineClamp={1}>{a.titulo || a.tipo_actividad}</Text>
-                    <Group gap={4} mt={2}>
-                      <IconUser size={12} />
-                      <Text size="xs" c="dimmed">{a.responsable || 'Sin responsable'}</Text>
-                    </Group>
-                  </Paper>
+                    <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="sm">
+                      {items.map(a => {
+                        const remaining = daysRemaining(a.fecha_programada)
+                        const vencida = isPastDue(a.fecha_programada, a.estado)
+                        const urgente = remaining <= 2 && !vencida
+                        return (
+                          <Paper key={a.id} p="xs" radius="sm" withBorder
+                            style={{
+                              borderLeft: `4px solid var(--mantine-color-${vencida ? 'red' : urgente ? 'orange' : prioridadColor[a.prioridad] || 'blue'}-6)`,
+                            }}
+                          >
+                            <Group justify="space-between" mb={2}>
+                              <Group gap={4}>
+                                <Text size="xs" c="dimmed">
+                                  {tipoIcon[a.tipo_actividad] || ''} {formatDate(a.fecha_programada)}
+                                </Text>
+                              </Group>
+                              <Badge
+                                color={vencida ? 'red' : urgente ? 'orange' : 'green'}
+                                size="xs"
+                                variant={vencida ? 'filled' : 'light'}
+                              >
+                                {vencida ? 'Vencida' : `${remaining} día${remaining !== 1 ? 's' : ''}`}
+                              </Badge>
+                            </Group>
+                            <Text size="sm" fw={500} lineClamp={1}>{a.titulo || a.tipo_actividad}</Text>
+                            <Group gap={4} mt={2}>
+                              <IconUser size={12} />
+                              <Text size="xs" c="dimmed">{a.responsable || 'Sin responsable'}</Text>
+                              <Badge color={estadoColor[a.estado] || 'blue'} size="xs" variant="light">{a.estado}</Badge>
+                            </Group>
+                          </Paper>
+                        )
+                      })}
+                    </SimpleGrid>
+                  </Box>
                 )
               })}
-            </SimpleGrid>
+            </Stack>
           </Collapse>
         </Paper>
       )}
@@ -542,6 +856,7 @@ export default function Planeacion() {
             data={[
               { value: 'table', label: <Group gap={4}><IconTable size={14} />Tabla</Group> },
               { value: 'calendar', label: <Group gap={4}><IconCalendar size={14} />Calendario</Group> },
+              { value: 'gantt', label: <Group gap={4}><IconGripVertical size={14} />Gantt</Group> },
             ]}
             size="xs"
           />
@@ -620,91 +935,222 @@ export default function Planeacion() {
             </Table.Tbody>
           </Table>
         </Paper>
-      ) : (
+      ) : viewMode === 'calendar' ? (
         <Paper withBorder p="md">
-          <Group justify="space-between" mb="md">
-            <Button
-              variant="subtle"
-              leftSection={<IconChevronLeft size={16} />}
-              onClick={() => setCalendarDate(calendarDate.subtract(1, 'month'))}
-            >
-              Anterior
-            </Button>
-            <Title order={4}>{calendarDate.format('MMMM YYYY')}</Title>
-            <Button
-              variant="subtle"
-              rightSection={<IconChevronRight size={16} />}
-              onClick={() => setCalendarDate(calendarDate.add(1, 'month'))}
-            >
-              Siguiente
-            </Button>
-          </Group>
+          {calendarSubView === 'year' ? (
+            <>
+              <Group justify="space-between" mb="md">
+                <Button
+                  variant="subtle"
+                  leftSection={<IconChevronLeft size={16} />}
+                  onClick={() => setCalendarDate(calendarDate.subtract(1, 'year'))}
+                >
+                  {calendarDate.subtract(1, 'year').format('YYYY')}
+                </Button>
+                <Title order={4}>{calendarDate.format('YYYY')}</Title>
+                <Button
+                  variant="subtle"
+                  rightSection={<IconChevronRight size={16} />}
+                  onClick={() => setCalendarDate(calendarDate.add(1, 'year'))}
+                >
+                  {calendarDate.add(1, 'year').format('YYYY')}
+                </Button>
+              </Group>
+              <SimpleGrid cols={{ base: 2, sm: 3, md: 4 }} spacing="md">
+                {Array.from({ length: 12 }, (_, i) => (
+                  <MonthMiniCalendar
+                    key={i}
+                    month={i}
+                    year={calendarDate.year()}
+                    activitiesByDate={yearActivities}
+                    onClickMonth={(m) => {
+                      setCalendarDate(dayjs(new Date(calendarDate.year(), m, 1)))
+                      setCalendarSubView('month')
+                    }}
+                  />
+                ))}
+              </SimpleGrid>
+              <Center mt="md">
+                <Button variant="light" size="xs" onClick={() => setCalendarSubView('month')}>
+                  Ver calendario mensual
+                </Button>
+              </Center>
+            </>
+          ) : (
+            <>
+              <Group justify="space-between" mb="md">
+                <Group>
+                  <Button
+                    variant="subtle"
+                    leftSection={<IconChevronLeft size={16} />}
+                    onClick={() => setCalendarDate(calendarDate.subtract(1, 'month'))}
+                  >
+                    Anterior
+                  </Button>
+                </Group>
+                <Group>
+                  <Title order={4}>{calendarDate.format('MMMM YYYY')}</Title>
+                  <Button variant="default" size="xs" onClick={() => setCalendarSubView('year')}>
+                    Vista anual
+                  </Button>
+                </Group>
+                <Button
+                  variant="subtle"
+                  rightSection={<IconChevronRight size={16} />}
+                  onClick={() => setCalendarDate(calendarDate.add(1, 'month'))}
+                >
+                  Siguiente
+                </Button>
+              </Group>
 
-          <SimpleGrid cols={7} spacing={2}>
-            {WEEKDAYS.map(d => (
-              <Text key={d} size="xs" fw={700} ta="center" c="dimmed" py={4}>{d}</Text>
-            ))}
-            {calendarDays.map((day, i) => (
-              <Paper
-                key={i}
-                p={4}
-                radius="sm"
-                withBorder={day !== null}
-                style={{
-                  minHeight: 70,
-                  background: day && day.count > 0
-                    ? `var(--mantine-color-${densityLevel(day.count) >= 3 ? 'red' : densityLevel(day.count) >= 2 ? 'orange' : densityLevel(day.count) >= 1 ? 'teal' : 'gray'}-${densityLevel(day.count) >= 1 ? '0' : '0'})`
-                    : undefined,
-                  opacity: day ? 1 : 0.3,
-                  cursor: day ? 'pointer' : 'default',
-                }}
-              >
-                {day && (
-                  <>
-                    <Text
-                      size="xs"
-                      fw={day.count > 0 ? 700 : 400}
-                      ta="center"
-                      c={isToday(day.date) ? 'blue.7' : day.count > 0 ? 'dark' : 'dimmed'}
-                      style={isToday(day.date) ? {
-                        background: 'var(--mantine-color-blue-1)',
-                        borderRadius: '50%',
-                        width: 22, height: 22,
-                        lineHeight: '22px',
-                        margin: '0 auto',
-                      } : undefined}
-                    >
-                      {day.day}
-                    </Text>
-                    {day.count > 0 && (
-                      <Stack align="center" gap={2} mt={2}>
-                        <IconCircleFilled
-                          size={8}
-                          color={`var(--mantine-color-${densityLevel(day.count) >= 3 ? 'red' : densityLevel(day.count) >= 2 ? 'orange' : 'teal'}-${densityLevel(day.count) >= 3 ? 7 : densityLevel(day.count) >= 2 ? 6 : 5})`}
-                        />
-                        <Text size="xs" c="dimmed" ta="center">{day.count} act.</Text>
-                      </Stack>
+              <SimpleGrid cols={7} spacing={2}>
+                {WEEKDAYS.map(d => (
+                  <Text key={d} size="xs" fw={700} ta="center" c="dimmed" py={4}>{d}</Text>
+                ))}
+                {calendarDays.map((day, i) => (
+                  <Paper
+                    key={i}
+                    p={4}
+                    radius="sm"
+                    withBorder={day !== null}
+                    style={{
+                      minHeight: 70,
+                      background: day && day.count > 0
+                        ? `var(--mantine-color-${densityLevel(day.count) >= 3 ? 'red' : densityLevel(day.count) >= 2 ? 'orange' : densityLevel(day.count) >= 1 ? 'teal' : 'gray'}-${densityLevel(day.count) >= 1 ? '0' : '0'})`
+                        : undefined,
+                      opacity: day ? 1 : 0.3,
+                      cursor: day ? 'pointer' : 'default',
+                    }}
+                  >
+                    {day && (
+                      <>
+                        <Text
+                          size="xs"
+                          fw={day.count > 0 ? 700 : 400}
+                          ta="center"
+                          c={isToday(day.date) ? 'blue.7' : day.count > 0 ? 'dark' : 'dimmed'}
+                          style={isToday(day.date) ? {
+                            background: 'var(--mantine-color-blue-1)',
+                            borderRadius: '50%',
+                            width: 22, height: 22,
+                            lineHeight: '22px',
+                            margin: '0 auto',
+                          } : undefined}
+                        >
+                          {day.day}
+                        </Text>
+                        {day.count > 0 && (
+                          <Stack align="center" gap={2} mt={2}>
+                            <IconCircleFilled
+                              size={8}
+                              color={`var(--mantine-color-${densityLevel(day.count) >= 3 ? 'red' : densityLevel(day.count) >= 2 ? 'orange' : 'teal'}-${densityLevel(day.count) >= 3 ? 7 : densityLevel(day.count) >= 2 ? 6 : 5})`}
+                            />
+                            <Text size="xs" c="dimmed" ta="center">{day.count} act.</Text>
+                          </Stack>
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-              </Paper>
-            ))}
-          </SimpleGrid>
+                  </Paper>
+                ))}
+              </SimpleGrid>
 
-          <Group justify="center" mt="md" gap="lg">
-            <Group gap={4}>
-              <IconCircleFilled size={10} color="var(--mantine-color-teal-5)" />
-              <Text size="xs" c="dimmed">1 act</Text>
+              <Group justify="center" mt="md" gap="lg">
+                <Group gap={4}>
+                  <IconCircleFilled size={10} color="var(--mantine-color-teal-5)" />
+                  <Text size="xs" c="dimmed">1 act</Text>
+                </Group>
+                <Group gap={4}>
+                  <IconCircleFilled size={10} color="var(--mantine-color-orange-6)" />
+                  <Text size="xs" c="dimmed">2-3 act</Text>
+                </Group>
+                <Group gap={4}>
+                  <IconCircleFilled size={10} color="var(--mantine-color-red-7)" />
+                  <Text size="xs" c="dimmed">4+ act</Text>
+                </Group>
+              </Group>
+            </>
+          )}
+        </Paper>
+      ) : (
+        <Paper withBorder p={0} style={{ overflow: 'hidden' }}>
+          <ScrollArea style={{ maxHeight: 600 }}>
+            <Box style={{ minWidth: LABEL_WIDTH + ganttData.totalDays * COL_WIDTH }}>
+              <Box style={{ display: 'flex' }}>
+                <Box style={{ width: LABEL_WIDTH, minWidth: LABEL_WIDTH, borderRight: '1px solid #dee2e6' }}>
+                  <Box style={{ height: HEADER_HEIGHT, borderBottom: '2px solid #dee2e6', padding: 8 }}>
+                    <Text fw={600} size="sm">Actividades</Text>
+                  </Box>
+                  {ganttData.items.map(a => (
+                    <Box
+                      key={a.id}
+                      style={{
+                        height: BAR_HEIGHT + BAR_GAP,
+                        paddingLeft: 8,
+                        paddingRight: 8,
+                        borderBottom: '1px solid #f0f0f0',
+                        display: 'flex',
+                        alignItems: 'center',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Box
+                        style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: '50%',
+                          background: ganttColor[a.tipo_actividad] || '#868e96',
+                          marginRight: 6,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Text size="xs" truncate style={{ fontSize: 11 }}>
+                        {a.titulo || a.tipo_actividad}
+                      </Text>
+                      {a.estado === 'en_curso' && (
+                        <Badge size="xs" color="cyan" variant="light" ml={4} style={{ flexShrink: 0 }}>En curso</Badge>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+                <Box style={{ flex: 1, overflowX: 'auto' }}>
+                  <Box style={{ position: 'relative' }}>
+                    <WeekGrid start={ganttData.start} days={ganttData.totalDays} ganttEnd={ganttData.end} />
+                    <DayGrid start={ganttData.start} totalDays={ganttData.totalDays} />
+                    <Box style={{ position: 'relative' }}>
+                      {ganttData.items.map(a => (
+                        <Box
+                          key={a.id}
+                          style={{
+                            height: BAR_HEIGHT + BAR_GAP,
+                            position: 'relative',
+                            borderBottom: '1px solid #f0f0f0',
+                          }}
+                        >
+                          <GanttBar
+                            activity={a}
+                            ganttStart={ganttData.start}
+                            ganttEnd={ganttData.end}
+                            onClick={handleGanttClick}
+                          />
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </ScrollArea>
+          <Box p="sm" style={{ borderTop: '1px solid #dee2e6' }}>
+            <Group gap="md">
+              <Text size="xs" fw={500}>Colores por tipo:</Text>
+              {Object.entries(ganttColor).filter(([, v]) => v).map(([tipo, color]) => (
+                <Group key={tipo} gap={4}>
+                  <Box style={{ width: 10, height: 10, borderRadius: 2, background: color }} />
+                  <Text size="xs" c="dimmed">{TIPOS_ACTIVIDAD.find(t => t.value === tipo)?.label || tipo}</Text>
+                </Group>
+              ))}
             </Group>
-            <Group gap={4}>
-              <IconCircleFilled size={10} color="var(--mantine-color-orange-6)" />
-              <Text size="xs" c="dimmed">2-3 act</Text>
-            </Group>
-            <Group gap={4}>
-              <IconCircleFilled size={10} color="var(--mantine-color-red-7)" />
-              <Text size="xs" c="dimmed">4+ act</Text>
-            </Group>
-          </Group>
+          </Box>
         </Paper>
       )}
 

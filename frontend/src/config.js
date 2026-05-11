@@ -6,7 +6,7 @@ export const COLOR_PALETTE = [
   '#00BCD4','#8BC34A','#FFC107','#795548','#607D8B',
 ]
 
-export const ESPECIES = ['bovino','bufalino','porcino','aviar','ovino','caprino','equino']
+export const ESPECIES = ['bovino','bufalino','porcino','aviar','ovino','caprino','equino','canino','felino','conejo','chiguiro','cuy']
 
 export const ESTADOS_ANIMAL = [
   { value: 'propio', label: 'Propio' },

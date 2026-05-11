@@ -32,6 +32,27 @@ def crear_lote_aves(data: dict, db: Session = Depends(get_db), current_user: Usu
     return l
 
 
+@router.put("/lotes-aves/{lote_id}")
+def actualizar_lote_aves(lote_id: int, data: dict, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    l = db.query(LoteAves).filter(LoteAves.id == lote_id).first()
+    if not l:
+        raise HTTPException(404, detail="Lote no encontrado")
+    for k, v in data.items():
+        setattr(l, k, v)
+    db.commit()
+    return l
+
+
+@router.delete("/lotes-aves/{lote_id}")
+def eliminar_lote_aves(lote_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    l = db.query(LoteAves).filter(LoteAves.id == lote_id).first()
+    if not l:
+        raise HTTPException(404, detail="Lote no encontrado")
+    db.delete(l)
+    db.commit()
+    return {"detail": "Lote eliminado"}
+
+
 # ============================================================
 # AVICOLA - Produccion de Huevos
 # ============================================================
@@ -57,6 +78,17 @@ def crear_huevos(data: dict, db: Session = Depends(get_db), current_user: Usuari
     db.add(h)
     db.commit()
     db.refresh(h)
+    return h
+
+
+@router.put("/produccion-huevos/{prod_id}")
+def actualizar_huevos(prod_id: int, data: dict, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    h = db.query(ProduccionHuevos).filter(ProduccionHuevos.id == prod_id).first()
+    if not h:
+        raise HTTPException(404, detail="Registro no encontrado")
+    for k, v in data.items():
+        setattr(h, k, v)
+    db.commit()
     return h
 
 
@@ -104,6 +136,27 @@ def crear_camada(data: dict, db: Session = Depends(get_db), current_user: Usuari
     return c
 
 
+@router.put("/camadas/{camada_id}")
+def actualizar_camada(camada_id: int, data: dict, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    c = db.query(Camada).filter(Camada.id == camada_id).first()
+    if not c:
+        raise HTTPException(404, detail="Camada no encontrada")
+    for k, v in data.items():
+        setattr(c, k, v)
+    db.commit()
+    return c
+
+
+@router.delete("/camadas/{camada_id}")
+def eliminar_camada(camada_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    c = db.query(Camada).filter(Camada.id == camada_id).first()
+    if not c:
+        raise HTTPException(404, detail="Camada no encontrada")
+    db.delete(c)
+    db.commit()
+    return {"detail": "Camada eliminada"}
+
+
 @router.get("/camadas/stats")
 def stats_camadas(db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     hoy = date.today()
@@ -149,6 +202,27 @@ def crear_engorde(data: dict, db: Session = Depends(get_db), current_user: Usuar
     db.commit()
     db.refresh(e)
     return e
+
+
+@router.put("/engorde-porcino/{engorde_id}")
+def actualizar_engorde(engorde_id: int, data: dict, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    e = db.query(EngordePorcino).filter(EngordePorcino.id == engorde_id).first()
+    if not e:
+        raise HTTPException(404, detail="Engorde no encontrado")
+    for k, v in data.items():
+        setattr(e, k, v)
+    db.commit()
+    return e
+
+
+@router.delete("/engorde-porcino/{engorde_id}")
+def eliminar_engorde(engorde_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    e = db.query(EngordePorcino).filter(EngordePorcino.id == engorde_id).first()
+    if not e:
+        raise HTTPException(404, detail="Engorde no encontrado")
+    db.delete(e)
+    db.commit()
+    return {"detail": "Engorde eliminado"}
 
 
 # ============================================================

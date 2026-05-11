@@ -16,6 +16,10 @@ import Configuracion from './pages/Configuracion.jsx'
 import Avicola from './pages/Avicola.jsx'
 import Porcicola from './pages/Porcicola.jsx'
 import Apicultura from './pages/Apicultura.jsx'
+import Equinos from './pages/Equinos.jsx'
+import CaninosFelinos from './pages/CaninosFelinos.jsx'
+import PequenosMamiferos from './pages/PequenosMamiferos.jsx'
+import EspeciesMenu from './pages/EspeciesMenu.jsx'
 import FichaAnimal from './pages/FichaAnimal.jsx'
 import FichaCultivo from './pages/FichaCultivo.jsx'
 import GruposManejo from './pages/GruposManejo.jsx'
@@ -26,6 +30,7 @@ import Trabajadores from './pages/Trabajadores.jsx'
 import Consolidado from './pages/Consolidado.jsx'
 import AdminSistema from './pages/AdminSistema.jsx'
 import Alertas from './pages/Alertas.jsx'
+import Plantillas from './pages/Plantillas.jsx'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth()
@@ -50,9 +55,13 @@ export default function App() {
           <Route path="planeacion" element={<Planeacion />} />
           <Route path="exportar" element={<Exportar />} />
           <Route path="configuracion" element={<Configuracion />} />
+          <Route path="especies" element={<EspeciesMenu />} />
           <Route path="avicola" element={<Avicola />} />
           <Route path="porcicola" element={<Porcicola />} />
           <Route path="apicultura" element={<Apicultura />} />
+          <Route path="equinos" element={<Equinos />} />
+          <Route path="caninos-felinos" element={<CaninosFelinos />} />
+          <Route path="pequenos-mamiferos" element={<PequenosMamiferos />} />
           <Route path="ficha-animal" element={<FichaAnimal />} />
           <Route path="cultivos/ficha" element={<FichaCultivo />} />
           <Route path="contabilidad" element={<Contabilidad />} />
@@ -62,6 +71,7 @@ export default function App() {
           <Route path="trabajadores" element={<Trabajadores />} />
           <Route path="consolidado" element={<Consolidado />} />
           <Route path="admin-sistema" element={<AdminSistema />} />
+          <Route path="plantillas" element={<Plantillas />} />
           <Route path="alertas" element={<Alertas />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

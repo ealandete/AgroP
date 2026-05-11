@@ -17,6 +17,8 @@ from app.routers.consumo import router as consumo_router
 from app.routers.transferencias import router as transferencias_router
 from app.routers.sistema import router as sistema_router
 from app.routers.alertas import router as alertas_router
+from app.routers.templates import router as templates_router
+from app.routers.vigilancia import router as vigilancia_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -54,6 +56,8 @@ app.include_router(consumo_router)
 app.include_router(transferencias_router)
 app.include_router(sistema_router)
 app.include_router(alertas_router)
+app.include_router(templates_router)
+app.include_router(vigilancia_router)
 
 
 @app.get("/api/health")

@@ -8,7 +8,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import {
   IconPlus, IconEdit, IconTrash, IconEye, IconUsersGroup,
-  IconArrowLeft,
+  IconArrowLeft, IconDownload, IconUpload,
 } from '@tabler/icons-react'
 import api from '../services/api.js'
 
@@ -148,6 +148,55 @@ export default function GruposManejo() {
       <Group justify="space-between">
         <Title order={3}>Grupos de Manejo</Title>
         <Group>
+          <Button
+            leftSection={<IconDownload size={16} />} variant="light" color="teal"
+            onClick={async () => {
+              try {
+                const r = await api.get('/templates/download/grupos-asignacion', { responseType: 'blob' })
+                const url = window.URL.createObjectURL(new Blob([r.data]))
+                const link = document.createElement('a')
+                link.href = url
+                link.setAttribute('download', 'plantilla_asignacion_grupos.xlsx')
+                document.body.appendChild(link)
+                link.click()
+                link.remove()
+                window.URL.revokeObjectURL(url)
+                notifications.show({ title: 'Plantilla descargada', color: 'green' })
+              } catch {
+                notifications.show({ title: 'Error al descargar', color: 'red' })
+              }
+            }}
+          >
+            Descargar plantilla
+          </Button>
+          <Button
+            leftSection={<IconUpload size={16} />} variant="light" color="blue"
+            onClick={() => {
+              const input = document.createElement('input')
+              input.type = 'file'
+              input.accept = '.xlsx,.xls'
+              input.onchange = async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                const form = new FormData()
+                form.append('file', file)
+                try {
+                  const r = await api.post('/templates/upload/grupos-asignacion', form)
+                  notifications.show({
+                    title: 'Carga completada',
+                    message: `${r.data.asignados} asignados, ${r.data.errores?.length || 0} errores`,
+                    color: r.data.errores?.length > 0 ? 'yellow' : 'green',
+                  })
+                  loadData()
+                } catch (err) {
+                  notifications.show({ title: 'Error', message: err.response?.data?.detail || 'Error', color: 'red' })
+                }
+              }
+              input.click()
+            }}
+          >
+            Cargar asignación masiva
+          </Button>
           <Button leftSection={<IconPlus size={16} />} variant="light" onClick={() => {
             setAsignarForm({ grupo_id: '', animal_ids: [] })
             openAsignar()
