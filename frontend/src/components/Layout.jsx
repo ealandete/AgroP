@@ -14,8 +14,10 @@ import {
   IconSearch, IconAlertTriangle, IconMail, IconMedicineSyrup, IconTractor,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
+import { useModo } from '../store/ModoContext.jsx'
 import api from '../services/api.js'
 import Breadcrumbs from './Breadcrumbs.jsx'
+import ModoSencillo from './ModoSencillo.jsx'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: IconDashboard, to: '/', section: 'core' },
@@ -113,6 +115,7 @@ export default function Layout() {
   const [fincaDetails, setFincaDetails] = useState(null)
   const isMobile = useMediaQuery('(max-width: 768px)')
 
+  const { modoSencillo, toggleModoSencillo } = useModo()
   const effectiveRole = activeRole || role || 'admin'
   const allowedRoutes = ROLE_NAV_ACCESS[effectiveRole] || ROLE_NAV_ACCESS.admin
 
@@ -261,6 +264,13 @@ export default function Layout() {
                   <Menu.Divider />
                 </>
               )}
+              <Menu.Item
+                leftSection={modoSencillo ? <IconCheck size={16} /> : <IconSettings size={16} />}
+                onClick={toggleModoSencillo}
+                c={modoSencillo ? 'green' : undefined}
+              >
+                {modoSencillo ? '✨ Modo Sencillo' : 'Modo Sencillo'}
+              </Menu.Item>
               <Menu.Item leftSection={<IconSettings size={16} />} onClick={() => navigate('/configuracion')}>
                 Configuración
               </Menu.Item>
@@ -316,11 +326,17 @@ export default function Layout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
+        {modoSencillo && (
+          <Paper p="xs" mb="sm" bg="green.1" c="green.8" fw={500} style={{ borderRadius: 8 }}>
+            ✨ Modo Sencillo activo
+          </Paper>
+        )}
         <Box hiddenFrom="xs" mb="xs">
           <Breadcrumbs items={getBreadcrumbItems()} />
         </Box>
         <Outlet />
       </AppShell.Main>
+      {modoSencillo && <ModoSencillo />}
     </AppShell>
   )
 }
