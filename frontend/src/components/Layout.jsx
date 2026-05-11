@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
-  AppShell, Group, Text, NavLink, Burger, Box,
-  useMantineTheme, Avatar, Menu, Select as MantineSelect,
+  AppShell, Group, Text, NavLink, Burger, Box, Select as MantineSelect,
+  useMantineTheme, Avatar, Menu,
 } from '@mantine/core'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import {
@@ -11,7 +11,7 @@ import {
   IconActivity, IconFileDownload, IconEgg, IconBug,
   IconUsers, IconUsersGroup, IconHealthRecognition, IconCalendarEvent, IconClipboardList,
   IconBuildingEstate, IconCheck, IconReportAnalytics, IconFileSpreadsheet,
-  IconSearch,
+  IconSearch, IconAlertTriangle,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import api from '../services/api.js'
@@ -26,6 +26,7 @@ const NAV_ITEMS = [
   { label: 'Grupos Manejo', icon: IconUsersGroup, to: '/grupos-manejo', section: 'core' },
   { label: 'Plantillas', icon: IconFileSpreadsheet, to: '/plantillas', section: 'core' },
   { label: 'Planeación', icon: IconCalendarEvent, to: '/planeacion', section: 'core' },
+  { label: 'Alertas', icon: IconAlertTriangle, to: '/alertas', section: 'core' },
   { label: 'Especies', icon: IconPlant, to: '/especies', section: 'especies' },
   { label: 'Consolidado', icon: IconReportAnalytics, to: '/consolidado', section: 'gestion' },
   { label: 'Contabilidad', icon: IconCoin, to: '/contabilidad', section: 'gestion' },
@@ -38,6 +39,22 @@ const NAV_ITEMS = [
   { label: 'Reportes', icon: IconFileDownload, to: '/exportar', section: 'analisis' },
   { label: 'Admin Sistema', icon: IconSettings, to: '/admin-sistema', section: 'sistema' },
   { label: 'Configuración', icon: IconSettings, to: '/configuracion', section: 'sistema' },
+]
+
+const ROLE_NAV_ACCESS = {
+  admin: NAV_ITEMS.map(i => i.to),
+  veterinario: ['/', '/animales', '/planeacion', '/estadisticas', '/alertas', '/especies'],
+  capataz: ['/', '/cultivos', '/lotes', '/operaciones', '/planeacion', '/trabajadores', '/especies'],
+  contador: ['/', '/contabilidad', '/inventario', '/nomina', '/estadisticas', '/consolidado'],
+  asistente: ['/', '/animales', '/cultivos', '/plantillas', '/exportar'],
+}
+
+const ROLES_SELECT = [
+  { value: 'admin', label: 'Dueño/Admin' },
+  { value: 'veterinario', label: 'Veterinario' },
+  { value: 'capataz', label: 'Capataz' },
+  { value: 'contador', label: 'Contador' },
+  { value: 'asistente', label: 'Asistente' },
 ]
 
 const ROUTE_NAMES = {
@@ -70,6 +87,12 @@ const ROUTE_NAMES = {
   '/trazabilidad': 'Trazabilidad',
   '/ficha-animal': 'Ficha Animal',
   '/cultivos/ficha': 'Ficha Cultivo',
+  '/alertas': 'Alertas',
+  '/inicio-propietario': 'Panel Propietario',
+  '/inicio-capataz': 'Panel Capataz',
+  '/inicio-veterinario': 'Panel Veterinario',
+  '/inicio-contador': 'Panel Contador',
+  '/inicio-asistente': 'Panel Asistente',
 }
 
 export default function Layout() {
@@ -77,11 +100,14 @@ export default function Layout() {
   const [opened, { toggle }] = useDisclosure()
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, logout } = useAuth()
+  const { user, logout, role, activeRole, setActiveRole, isAdmin } = useAuth()
   const [fincas, setFincas] = useState([])
   const [fincaActiva, setFincaActiva] = useState(() => localStorage.getItem('agrop_finca_id') || '')
   const [fincaDetails, setFincaDetails] = useState(null)
   const isMobile = useMediaQuery('(max-width: 768px)')
+
+  const effectiveRole = activeRole || role || 'admin'
+  const allowedRoutes = ROLE_NAV_ACCESS[effectiveRole] || ROLE_NAV_ACCESS.admin
 
   useEffect(() => {
     api.get('/lotes/fincas/').then(r => {
@@ -111,7 +137,6 @@ export default function Layout() {
   const getBreadcrumbItems = () => {
     const path = location.pathname
     if (path === '/') return []
-
     const segments = path.split('/').filter(Boolean)
     const items = []
     let accumulated = ''
@@ -124,6 +149,8 @@ export default function Layout() {
     }
     return items
   }
+
+  const filteredNavItems = NAV_ITEMS.filter(item => allowedRoutes.includes(item.to))
 
   return (
     <AppShell
@@ -166,6 +193,16 @@ export default function Layout() {
                 </Menu.Dropdown>
               </Menu>
             )}
+            {isAdmin && !isMobile && (
+              <MantineSelect
+                data={ROLES_SELECT}
+                value={effectiveRole}
+                onChange={(val) => { setActiveRole(val); navigate('/') }}
+                size="xs"
+                w={150}
+                mr="sm"
+              />
+            )}
           </Group>
           <Menu shadow="md" width={220}>
             <Menu.Target>
@@ -175,6 +212,21 @@ export default function Layout() {
               </Group>
             </Menu.Target>
             <Menu.Dropdown>
+              {isAdmin && (
+                <>
+                  <Menu.Label>Vista como</Menu.Label>
+                  {ROLES_SELECT.map(r => (
+                    <Menu.Item
+                      key={r.value}
+                      onClick={() => { setActiveRole(r.value); navigate('/') }}
+                      leftSection={r.value === effectiveRole ? <IconCheck size={16} /> : null}
+                    >
+                      {r.label}
+                    </Menu.Item>
+                  ))}
+                  <Menu.Divider />
+                </>
+              )}
               {fincas.length > 1 && (
                 <>
                   <Menu.Label>Fincas</Menu.Label>
@@ -213,7 +265,7 @@ export default function Layout() {
             sistema: { label: 'SISTEMA', color: 'gray' },
           }
           let currentSection = ''
-          return NAV_ITEMS.flatMap((item) => {
+          return filteredNavItems.flatMap((item) => {
             const items = []
             if (item.section !== currentSection) {
               currentSection = item.section

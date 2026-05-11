@@ -32,11 +32,31 @@ import AdminSistema from './pages/AdminSistema.jsx'
 import Alertas from './pages/Alertas.jsx'
 import Plantillas from './pages/Plantillas.jsx'
 import Trazabilidad from './pages/Trazabilidad.jsx'
+import InicioPropietario from './pages/InicioPropietario.jsx'
+import InicioCapataz from './pages/InicioCapataz.jsx'
+import InicioVeterinario from './pages/InicioVeterinario.jsx'
+import InicioContador from './pages/InicioContador.jsx'
+import InicioAsistente from './pages/InicioAsistente.jsx'
+
+const ROLE_HOME = {
+  admin: '/inicio-propietario',
+  veterinario: '/inicio-veterinario',
+  capataz: '/inicio-capataz',
+  contador: '/inicio-contador',
+  asistente: '/inicio-asistente',
+}
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth()
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return children
+}
+
+function HomeRedirect() {
+  const { activeRole, role } = useAuth()
+  const effectiveRole = activeRole || role || 'admin'
+  const target = ROLE_HOME[effectiveRole] || '/inicio-propietario'
+  return <Navigate to={target} replace />
 }
 
 export default function App() {
@@ -45,7 +65,8 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route index element={<Dashboard />} />
+          <Route index element={<HomeRedirect />} />
+          <Route path="dashboard" element={<Dashboard />} />
           <Route path="animales" element={<Animales />} />
           <Route path="cultivos" element={<Cultivos />} />
           <Route path="lotes" element={<Lotes />} />
@@ -75,6 +96,11 @@ export default function App() {
           <Route path="plantillas" element={<Plantillas />} />
           <Route path="alertas" element={<Alertas />} />
           <Route path="trazabilidad" element={<Trazabilidad />} />
+          <Route path="inicio-propietario" element={<InicioPropietario />} />
+          <Route path="inicio-capataz" element={<InicioCapataz />} />
+          <Route path="inicio-veterinario" element={<InicioVeterinario />} />
+          <Route path="inicio-contador" element={<InicioContador />} />
+          <Route path="inicio-asistente" element={<InicioAsistente />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
