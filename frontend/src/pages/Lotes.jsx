@@ -12,6 +12,7 @@ import { notifications } from '@mantine/notifications'
 import {
   IconPlus, IconEdit, IconSearch,
   IconEye, IconCheck, IconX, IconEditCircle, IconInfoCircle,
+  IconQuestionMark, IconHelp,
 } from '@tabler/icons-react'
 import { MapContainer, TileLayer, Polygon, Popup, useMap, CircleMarker } from 'react-leaflet'
 import api from '../services/api.js'
@@ -162,39 +163,8 @@ function DrawControl({ lotes, editingPolygonId, onPolygonDrawn, startDrawing }) 
 }
 
 function MapaLotes({ lotes, finca, selectedId, onSelect, editingPolygonId, onPolygonDrawn, startDrawing }) {
-  const [showHelp, setShowHelp] = useState(true)
   return (
     <Paper withBorder style={{ height: 500, overflow: 'hidden', position: 'relative' }}>
-      {showHelp && (
-        <Paper
-          shadow="md"
-          p="xs"
-          withBorder
-          style={{
-            position: 'absolute', top: 10, left: 10, zIndex: 1000,
-            maxWidth: 280, fontSize: 11, backgroundColor: 'rgba(255,255,255,0.95)',
-          }}
-        >
-          <Group justify="space-between" mb={2}>
-            <Text fw={600} size="xs">
-              <IconInfoCircle size={12} style={{ marginRight: 4 }} />
-              Edición de mapa
-            </Text>
-            <ActionIcon size="xs" variant="subtle" onClick={() => setShowHelp(false)}>
-              <IconX size={12} />
-            </ActionIcon>
-          </Group>
-          <Text size={10} c="dimmed" component="div">
-            🖱️ <b>Click</b> sobre lote → seleccionar<br />
-            🖱️ <b>Arrastrar</b> mapa → mover vista<br />
-            🔍 <b>Scroll</b> → zoom<br />
-            ✏️ <b>Dibujar polígono</b> → click "Dibujar polígono", luego click en mapa para crear vértices<br />
-            🔵 <b>Editar vértices</b> → click "Editar polígono", luego arrastrar puntos azules<br />
-            ❌ <b>Eliminar vértice</b> → Shift+click en un vértice<br />
-            ✅ <b>Cerrar polígono</b> → click en el primer vértice
-          </Text>
-        </Paper>
-      )}
       <MapContainer
         center={[parseFloat(finca?.latitud || 10.7535), parseFloat(finca?.longitud || -74.678)]}
         zoom={14}
@@ -471,6 +441,7 @@ export default function Lotes() {
   const [saving, setSaving] = useState(false)
   const [editingPolygonId, setEditingPolygonId] = useState(null)
   const [startDrawing, setStartDrawing] = useState(0)
+  const [mapHelpOpened, { open: openMapHelp, close: closeMapHelp }] = useDisclosure(false)
 
   const fincaId = localStorage.getItem('agrop_finca_id') || '1'
 
@@ -775,7 +746,18 @@ export default function Lotes() {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 7 }}>
-          <FarmInfoCard finca={finca} lotCount={lotes.length} />
+          <Group justify="space-between" mb="xs">
+            <FarmInfoCard finca={finca} lotCount={lotes.length} />
+            <Button
+              size="xs"
+              variant="subtle"
+              color="gray"
+              leftSection={<IconHelp size={16} />}
+              onClick={openMapHelp}
+            >
+              Cómo usar el mapa
+            </Button>
+          </Group>
           <MapaLotes
             lotes={lotes}
             finca={finca}
@@ -902,6 +884,39 @@ export default function Lotes() {
           />
         </Paper>
       )}
+
+      {/* Map help modal */}
+      <Modal opened={mapHelpOpened} onClose={closeMapHelp} title="🗺️ Cómo usar el mapa" size="md">
+        <Stack gap="md">
+          <Paper p="sm" withBorder>
+            <Text fw={600} size="sm" mb="xs">🖱️ Navegación básica</Text>
+            <Text size="sm" component="div">
+              • <b>Click</b> sobre un lote → lo selecciona y muestra sus datos<br />
+              • <b>Arrastrar</b> el mapa → mover la vista<br />
+              • <b>Scroll</b> → acercar/alejar zoom<br />
+              • <b>Click en el popup</b> → ver detalles del lote
+            </Text>
+          </Paper>
+          <Paper p="sm" withBorder>
+            <Text fw={600} size="sm" mb="xs">✏️ Editar polígonos</Text>
+            <Text size="sm" component="div">
+              • Click <b>"Editar polígono"</b> → se activa el modo edición<br />
+              • <b>Arrastrar puntos azules</b> → modificar vértices<br />
+              • <b>Shift + Click</b> en un vértice → eliminarlo<br />
+              • Los cambios se guardan al hacer clic en "Guardar"
+            </Text>
+          </Paper>
+          <Paper p="sm" withBorder>
+            <Text fw={600} size="sm" mb="xs">🎨 Dibujar nuevo polígono</Text>
+            <Text size="sm" component="div">
+              • Click <b>"Dibujar polígono"</b> en el formulario<br />
+              • Click en el mapa para crear cada vértice<br />
+              • Click en el <b>primer vértice</b> para cerrar el polígono<br />
+              • El área se muestra mientras dibujas
+            </Text>
+          </Paper>
+        </Stack>
+      </Modal>
     </Stack>
   )
 }

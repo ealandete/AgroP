@@ -143,7 +143,7 @@ export default function Consolidado() {
       {ingresoChart.length > 0 && (
         <Paper p="md" radius="md" withBorder>
           <Text fw={600} mb="md">Ingresos vs Gastos por Finca (miles COP)</Text>
-          <BarChart h={350} data={ingresoChart} dataKey="Finca" series={[{ name: 'Ingresos', color: 'green.6' }, { name: 'Gastos', color: 'red.5' }]} valueFormatter={v => `$${v}k`} tickLine="y" />
+          <BarChart h={350} data={ingresoChart} dataKey="Finca" series={[{ name: 'Ingresos', color: 'green.6' }, { name: 'Gastos', color: 'red.5' }]} />
         </Paper>
       )}
 
