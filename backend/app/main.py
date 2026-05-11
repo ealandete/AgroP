@@ -27,6 +27,7 @@ from app.routers.agua import router as agua_router
 from app.routers.alimentacion import router as alimentacion_router
 from app.routers.bioseguridad import router as bioseguridad_router
 from app.routers.certificaciones import router as certificaciones_router
+from app.routers.picicultura import router as picicultura_router
 
 tags_metadata = [
     {"name": "Autenticacion", "description": "Login, registro, tokens"},
@@ -44,6 +45,7 @@ tags_metadata = [
     {"name": "Certificaciones", "description": "Gestion de certificaciones y no conformidades"},
     {"name": "Agua / Riego", "description": "Fuentes de agua, consumo y calidad"},
     {"name": "Alimentacion", "description": "Alimentos, dietas y consumo diario"},
+    {"name": "Picicultura", "description": "Gestion de estanques, cosechas, calidad de agua y alimentacion de peces"},
 ]
 
 app = FastAPI(
@@ -149,6 +151,7 @@ app.include_router(bioseguridad_router)
 app.include_router(certificaciones_router)
 app.include_router(agua_router)
 app.include_router(alimentacion_router)
+app.include_router(picicultura_router)
 
 
 @app.get("/api/health")

@@ -692,6 +692,114 @@ class ConsolidadoContable(BaseModel):
     area_total: float
 
 
+# ─── Picicultura ──────────────────────────────────────────────
+
+class EstanqueBase(BaseModel):
+    finca_id: int
+    nombre: str
+    codigo: Optional[str] = None
+    area_m2: Optional[float] = None
+    profundidad_m: Optional[float] = None
+    tipo: str = "tierra_concreto"
+    especie_cultivada: str = "tilapia"
+    capacidad_peces: Optional[int] = None
+    sistema_aireacion: Optional[str] = None
+    fecha_construccion: Optional[date] = None
+
+class EstanqueCreate(EstanqueBase):
+    pass
+
+class EstanqueUpdate(BaseModel):
+    nombre: Optional[str] = None
+    codigo: Optional[str] = None
+    area_m2: Optional[float] = None
+    profundidad_m: Optional[float] = None
+    tipo: Optional[str] = None
+    especie_cultivada: Optional[str] = None
+    capacidad_peces: Optional[int] = None
+    sistema_aireacion: Optional[str] = None
+    fecha_construccion: Optional[date] = None
+    activo: Optional[bool] = None
+
+class EstanqueOut(EstanqueBase):
+    id: int
+    activo: bool
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class CosechaPezBase(BaseModel):
+    estanque_id: int
+    fecha: date
+    cantidad_kg: float
+    peso_promedio_g: Optional[float] = None
+    sobrevivencia_pct: Optional[float] = None
+    destino: Optional[str] = None
+    observaciones: Optional[str] = None
+
+class CosechaPezCreate(CosechaPezBase):
+    pass
+
+class CosechaPezOut(CosechaPezBase):
+    id: int
+    created_at: Optional[datetime]
+    estanque_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class CalidadAguaEstanqueBase(BaseModel):
+    estanque_id: int
+    fecha: date
+    temperatura_agua: Optional[float] = None
+    ph: Optional[float] = None
+    oxigeno_disuelto_mgl: Optional[float] = None
+    amoniaco_mgl: Optional[float] = None
+    turbidez: Optional[float] = None
+    observaciones: Optional[str] = None
+
+class CalidadAguaEstanqueCreate(CalidadAguaEstanqueBase):
+    pass
+
+class CalidadAguaEstanqueOut(CalidadAguaEstanqueBase):
+    id: int
+    created_at: Optional[datetime]
+    estanque_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AlimentacionPecesBase(BaseModel):
+    estanque_id: int
+    fecha: date
+    tipo_alimento: str
+    cantidad_kg: float
+    frecuencia_diaria: int = 1
+
+class AlimentacionPecesCreate(AlimentacionPecesBase):
+    pass
+
+class AlimentacionPecesOut(AlimentacionPecesBase):
+    id: int
+    created_at: Optional[datetime]
+    estanque_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ResumenPicicultura(BaseModel):
+    estanques_activos: int
+    cosechas_mes: int
+    total_kg_mes: float
+    calidad_promedio_ph: Optional[float] = None
+
+
 # --- Registros Climáticos ---
 class RegistroClimaticoBase(BaseModel):
     finca_id: int

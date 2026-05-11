@@ -12,7 +12,7 @@ import {
   IconUsers, IconUsersGroup, IconHealthRecognition, IconCalendarEvent, IconClipboardList,
   IconBuildingEstate, IconCheck, IconReportAnalytics, IconFileSpreadsheet,
   IconSearch, IconAlertTriangle, IconMail, IconMedicineSyrup, IconTractor,
-  IconShield, IconCertificate, IconDroplet, IconApple, IconQrcode,
+  IconShield, IconCertificate, IconDroplet, IconApple, IconQrcode, IconFish,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import { useModo } from '../store/ModoContext.jsx'
@@ -39,6 +39,7 @@ const NAV_ITEMS = [
   { label: 'Farmacia', icon: IconMedicineSyrup, to: '/farmacia', section: 'core' },
   { label: 'Agua', icon: IconDroplet, to: '/agua', section: 'core' },
   { label: 'Alimentación', icon: IconApple, to: '/alimentacion', section: 'core' },
+  { label: 'Picicultura', icon: IconFish, to: '/picicultura', section: 'core' },
   { label: 'Especies', icon: IconPlant, to: '/especies', section: 'especies' },
   { label: 'Consolidado', icon: IconReportAnalytics, to: '/consolidado', section: 'gestion' },
   { label: 'Contabilidad', icon: IconCoin, to: '/contabilidad', section: 'gestion' },
@@ -110,6 +111,7 @@ const ROUTE_NAMES = {
   '/farmacia': 'Farmacia',
   '/agua': 'Agua',
   '/alimentacion': 'Alimentación',
+  '/picicultura': 'Picicultura',
   '/inicio-propietario': 'Panel Propietario',
   '/inicio-capataz': 'Panel Capataz',
   '/inicio-veterinario': 'Panel Veterinario',

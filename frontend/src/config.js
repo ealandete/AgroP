@@ -21,7 +21,17 @@ export const CATEGORIAS_ANIMAL_ESTADO = {
   adopcion: { inventario: 'tercero', contable: 'no_amortizable' },
   consignacion: { inventario: 'tercero', contable: 'consignacion' },
 }
-export const TIPOS_CULTIVO = ['maiz','arroz','frijol','cafe','cacao','platano','yuca','papa','sorgo','pastura']
+export const TIPOS_CULTIVO = [
+  'maiz','arroz','frijol','cafe','cacao','platano','yuca','papa',
+  'sorgo','pastura','coco','palma_africana','cana_azucar','algodon',
+  'banano','mango','aguacate','citricos','naranja','limon','mandarina',
+  'maracuya','guanabana','piña','papaya','sandia','melon',
+  'tomate','cebolla','pimenton','zanahoria','lechuga','repollo',
+  'fresa','mora','lulo','granadilla','curuba',
+  'flores','rosas','claveles','crisantemos',
+  'forestales','teca','pino','eucalipto',
+  'otro'
+]
 export const TIPOS_PRODUCTO = ['leche','carne','queso','huevos','miel','grano','fruta','verdura','elaborado']
 
 export const formatCOP = (value) =>

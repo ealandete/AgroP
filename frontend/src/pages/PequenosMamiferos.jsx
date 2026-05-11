@@ -5,7 +5,7 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import { IconPlus, IconEdit, IconTrash, IconDog, IconVaccine, IconHeartbeat, IconWeight, IconBabyBottle } from '@tabler/icons-react'
+import { IconPlus, IconEdit, IconTrash, IconPaw, IconVaccine, IconHeartbeat, IconWeight, IconBabyBottle } from '@tabler/icons-react'
 import api from '../services/api.js'
 import { formatNumber } from '../config.js'
 
@@ -13,6 +13,8 @@ const ESPECIES_PEQUENAS = [
   { value: 'conejo', label: 'Conejo' },
   { value: 'chiguiro', label: 'Chigüiro' },
   { value: 'cuy', label: 'Cuy' },
+  { value: 'perro', label: 'Perro' },
+  { value: 'gato', label: 'Gato' },
 ]
 
 const ETAPAS = [
@@ -40,7 +42,7 @@ export default function PequenosMamiferos() {
 
   const loadAnimales = async () => {
     try {
-      const especies = ['conejo', 'chiguiro', 'cuy']
+      const especies = ['conejo', 'chiguiro', 'cuy', 'perro', 'gato']
       const resultados = await Promise.all(
         especies.map(esp => api.get(`/animales/?especie=${esp}`).then(r => r.data).catch(() => []))
       )
@@ -114,7 +116,7 @@ export default function PequenosMamiferos() {
 
       <SimpleGrid cols={{ base: 2, sm: 4 }}>
         <Paper p="md" radius="md" withBorder>
-          <Group gap={8}><IconDog size={20} color="var(--mantine-color-blue-6)" /><Text size="xs" c="dimmed">Total Animales</Text></Group>
+          <Group gap={8}><IconPaw size={20} color="var(--mantine-color-blue-6)" /><Text size="xs" c="dimmed">Total Animales</Text></Group>
           <Text size="xl" fw={700}>{formatNumber(animales.length)}</Text>
         </Paper>
         <Paper p="md" radius="md" withBorder>
@@ -133,7 +135,7 @@ export default function PequenosMamiferos() {
 
       <Tabs value={activeTab} onChange={setActiveTab}>
         <Tabs.List>
-          <Tabs.Tab value="lista" leftSection={<IconDog size={16} />}>Animales ({filtrados.length})</Tabs.Tab>
+          <Tabs.Tab value="lista" leftSection={<IconPaw size={16} />}>Animales ({filtrados.length})</Tabs.Tab>
           <Tabs.Tab value="reproduccion" leftSection={<IconBabyBottle size={16} />}>Reproducción</Tabs.Tab>
           <Tabs.Tab value="salud" leftSection={<IconVaccine size={16} />}>Sanidad</Tabs.Tab>
         </Tabs.List>
@@ -169,7 +171,7 @@ export default function PequenosMamiferos() {
                   <Table.Tr key={a.id}>
                     <Table.Td>
                       <Badge size="sm" variant="light" color={
-                        a.especie === 'conejo' ? 'pink' : a.especie === 'chiguiro' ? 'brown' : 'yellow'
+                        a.especie === 'conejo' ? 'pink' : a.especie === 'chiguiro' ? 'brown' : a.especie === 'cuy' ? 'yellow' : a.especie === 'perro' ? 'blue' : 'gray'
                       }>
                         {a.especie}
                       </Badge>

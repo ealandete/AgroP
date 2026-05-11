@@ -20,9 +20,15 @@ import dayjs from 'dayjs'
 import isBetween from 'dayjs/plugin/isBetween'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import api from '../services/api.js'
+import ErrorBoundary from '../components/ErrorBoundary.jsx'
 
 dayjs.extend(isBetween)
 dayjs.extend(isoWeek)
+
+const safeDayjs = (d) => {
+  const result = d ? dayjs(d) : null
+  return result && result.isValid() ? result : null
+}
 
 const toArray = (str) => (str ? String(str).split(',').map(s => s.trim()).filter(Boolean) : [])
 const toCSV = (arr) => (arr || []).filter(Boolean).join(',')
@@ -225,9 +231,11 @@ function DayGrid({ start, totalDays }) {
 }
 
 function getActivityEnd(a) {
-  if (a.fecha_ejecucion) return dayjs(a.fecha_ejecucion)
-  if (a.duracion_estimada) return dayjs(a.fecha_programada).add(a.duracion_estimada, 'day')
-  return dayjs(a.fecha_programada).add(1, 'day')
+  const prog = safeDayjs(a.fecha_programada)
+  if (!prog) return dayjs()
+  if (a.fecha_ejecucion) return safeDayjs(a.fecha_ejecucion) || prog
+  if (a.duracion_estimada) return prog.add(a.duracion_estimada, 'day')
+  return prog.add(1, 'day')
 }
 
 function GanttBar({ activity, startDay, ganttStart, ganttEnd, onClick }) {
@@ -407,9 +415,11 @@ export default function Planeacion() {
       setGrupos(Array.isArray(gruposRes.data) ? gruposRes.data : [])
       setInsumos(Array.isArray(insumosRes.data) ? insumosRes.data : [])
     } catch (e) {
-      console.log(e)
+      console.error('Error loading Planeacion data:', e)
     }
   }
+
+  console.log('[Planeacion] data loaded:', data.length, 'items')
 
   const loadIndicadores = async () => {
     try {
@@ -480,12 +490,16 @@ export default function Planeacion() {
   const proximasActividades = useMemo(() => {
     const today = dayjs().startOf('day')
     const thirtyDays = today.add(30, 'day')
-    return data.filter(a => {
-      if (a.estado === 'completado' || a.estado === 'cancelado') return false
+    return (data || []).filter(a => {
+      if (!a || a.estado === 'completado' || a.estado === 'cancelado') return false
       if (!a.fecha_programada) return false
-      const d = dayjs(a.fecha_programada)
-      return d.isBetween(today.subtract(1, 'day'), thirtyDays, 'day', '[]')
-    }).sort((a, b) => dayjs(a.fecha_programada).unix() - dayjs(b.fecha_programada).unix())
+      const d = safeDayjs(a.fecha_programada)
+      return d && d.isBetween(today.subtract(1, 'day'), thirtyDays, 'day', '[]')
+    }).sort((a, b) => {
+      const da = safeDayjs(a.fecha_programada)
+      const db = safeDayjs(b.fecha_programada)
+      return (da ? da.unix() : 0) - (db ? db.unix() : 0)
+    })
   }, [data])
 
   const proximasAgrupadas = useMemo(() => {
@@ -509,8 +523,8 @@ export default function Planeacion() {
 
   const calendarActivities = useMemo(() => {
     const map = {}
-    data.forEach(a => {
-      if (!a.fecha_programada) return
+    ;(data || []).forEach(a => {
+      if (!a || !a.fecha_programada) return
       const key = a.fecha_programada
       if (!map[key]) map[key] = []
       map[key].push(a)
@@ -519,6 +533,7 @@ export default function Planeacion() {
   }, [data])
 
   const calendarDays = useMemo(() => {
+    if (!calendarDate || !calendarDate.isValid()) return []
     const startOfMonth = calendarDate.startOf('month')
     const endOfMonth = calendarDate.endOf('month')
     const startDay = startOfMonth.day()
@@ -537,8 +552,8 @@ export default function Planeacion() {
 
   const yearActivities = useMemo(() => {
     const map = {}
-    data.forEach(a => {
-      if (!a.fecha_programada) return
+    ;(data || []).forEach(a => {
+      if (!a || !a.fecha_programada) return
       const key = a.fecha_programada
       if (!map[key]) map[key] = []
       map[key].push(a)
@@ -547,18 +562,23 @@ export default function Planeacion() {
   }, [data])
 
   const ganttData = useMemo(() => {
-    const active = filteredData.filter(a => a.estado !== 'cancelado' && a.fecha_programada)
-    if (active.length === 0) return { items: [], start: dayjs(), end: dayjs().add(30, 'day'), totalDays: 30 }
+    const active = (filteredData || []).filter(a => a && a.estado !== 'cancelado' && a.fecha_programada)
+    if (active.length === 0) {
+      const now = dayjs()
+      return { items: [], start: now, end: now.add(30, 'day'), totalDays: 30 }
+    }
 
-    let minDate = dayjs(active[0].fecha_programada)
-    let maxDate = dayjs(active[0].fecha_programada)
+    let minDate = safeDayjs(active[0].fecha_programada) || dayjs()
+    let maxDate = safeDayjs(active[0].fecha_programada) || dayjs()
 
     active.forEach(a => {
-      const s = dayjs(a.fecha_programada)
+      const s = safeDayjs(a.fecha_programada)
       const e = getActivityEnd(a)
-      if (s.isBefore(minDate)) minDate = s
-      if (e.isAfter(maxDate)) maxDate = e
+      if (s && s.isBefore(minDate)) minDate = s
+      if (e && e.isAfter(maxDate)) maxDate = e
     })
+
+    console.log('[Planeacion] Gantt range:', minDate.format('YYYY-MM-DD'), 'to', maxDate.format('YYYY-MM-DD'))
 
     const ganttStart = minDate.startOf('week').subtract(1, 'week')
     const ganttEnd = maxDate.endOf('week').add(1, 'week')
@@ -691,22 +711,33 @@ export default function Planeacion() {
     return ids.map(id => getItemName(siembras, id)).join(', ')
   }
 
-  const formatDate = (dateStr) => dateStr ? dayjs(dateStr).format('DD/MM/YYYY') : '-'
+  const formatDate = (dateStr) => {
+    const d = safeDayjs(dateStr)
+    return d ? d.format('DD/MM/YYYY') : '-'
+  }
 
-  const isToday = (dateStr) => dayjs(dateStr).isSame(dayjs(), 'day')
+  const isToday = (dateStr) => {
+    const d = safeDayjs(dateStr)
+    return d ? d.isSame(dayjs(), 'day') : false
+  }
 
-  const isPastDue = (dateStr, estado) =>
-    estado !== 'completado' && estado !== 'cancelado' && dayjs(dateStr).isBefore(dayjs(), 'day')
+  const isPastDue = (dateStr, estado) => {
+    if (estado === 'completado' || estado === 'cancelado') return false
+    const d = safeDayjs(dateStr)
+    return d ? d.isBefore(dayjs(), 'day') : false
+  }
 
   const handleGanttClick = (a) => handleEdit(a)
 
   const daysRemaining = (dateStr) => {
-    const d = dayjs(dateStr)
+    const d = safeDayjs(dateStr)
+    if (!d) return 0
     const today = dayjs().startOf('day')
     return d.diff(today, 'day')
   }
 
   return (
+    <ErrorBoundary fallback={<Paper p="xl" withBorder><Text c="red" ta="center">Error al cargar el módulo de Planeación. Intente recargar la página.</Text></Paper>}>
     <Stack>
       <Group justify="space-between">
         <Title order={3}>Planeación y Cronograma de Actividades</Title>
@@ -880,7 +911,7 @@ export default function Planeacion() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {filteredData.map((a) => (
+              {(filteredData || []).map((a) => (
                 <Table.Tr key={a.id}
                   style={isPastDue(a.fecha_programada, a.estado) ? { background: 'var(--mantine-color-red-0)' } : undefined}
                 >
@@ -1117,23 +1148,23 @@ export default function Planeacion() {
                     <WeekGrid start={ganttData.start} days={ganttData.totalDays} ganttEnd={ganttData.end} />
                     <DayGrid start={ganttData.start} totalDays={ganttData.totalDays} />
                     <Box style={{ position: 'relative' }}>
-                      {ganttData.items.map(a => (
-                        <Box
-                          key={a.id}
-                          style={{
-                            height: BAR_HEIGHT + BAR_GAP,
-                            position: 'relative',
-                            borderBottom: '1px solid #f0f0f0',
-                          }}
-                        >
-                          <GanttBar
-                            activity={a}
-                            ganttStart={ganttData.start}
-                            ganttEnd={ganttData.end}
-                            onClick={handleGanttClick}
-                          />
-                        </Box>
-                      ))}
+                  {(ganttData.items || []).map(a => (
+                    <Box
+                      key={a.id}
+                      style={{
+                        height: BAR_HEIGHT + BAR_GAP,
+                        position: 'relative',
+                        borderBottom: '1px solid #f0f0f0',
+                      }}
+                    >
+                      <GanttBar
+                        activity={a}
+                        ganttStart={ganttData.start}
+                        ganttEnd={ganttData.end}
+                        onClick={handleGanttClick}
+                      />
+                    </Box>
+                  ))}
                     </Box>
                   </Box>
                 </Box>
@@ -1283,5 +1314,6 @@ export default function Planeacion() {
         </Stack>
       </Modal>
     </Stack>
+    </ErrorBoundary>
   )
 }

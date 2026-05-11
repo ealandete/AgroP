@@ -1165,6 +1165,74 @@ class TransferenciaInsumo(Base):
     finca_destino = relationship("Finca", foreign_keys=[finca_destino_id])
 
 
+# ============================================================
+# MODELOS PICICULTURA - Estanques, Cosechas, Calidad, Alimentacion
+# ============================================================
+
+class Estanque(Base):
+    __tablename__ = "estanques"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    nombre = Column(String(100), nullable=False)
+    codigo = Column(String(50))
+    area_m2 = Column(DECIMAL(10, 2))
+    profundidad_m = Column(DECIMAL(5, 2))
+    tipo = Column(String(30), default="tierra_concreto")
+    especie_cultivada = Column(String(50), default="tilapia")
+    capacidad_peces = Column(Integer)
+    sistema_aireacion = Column(String(100))
+    fecha_construccion = Column(Date)
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    finca = relationship("Finca")
+
+
+class CosechaPez(Base):
+    __tablename__ = "cosechas_peces"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    estanque_id = Column(Integer, ForeignKey("estanques.id", ondelete="CASCADE"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    cantidad_kg = Column(DECIMAL(10, 2), nullable=False)
+    peso_promedio_g = Column(DECIMAL(8, 2))
+    sobrevivencia_pct = Column(DECIMAL(5, 2))
+    destino = Column(String(100))
+    observaciones = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    estanque = relationship("Estanque")
+
+
+class CalidadAguaEstanque(Base):
+    __tablename__ = "calidad_agua_estanque"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    estanque_id = Column(Integer, ForeignKey("estanques.id", ondelete="CASCADE"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    temperatura_agua = Column(DECIMAL(4, 1))
+    ph = Column(DECIMAL(4, 2))
+    oxigeno_disuelto_mgl = Column(DECIMAL(4, 2))
+    amoniaco_mgl = Column(DECIMAL(6, 4))
+    turbidez = Column(DECIMAL(6, 2))
+    observaciones = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    estanque = relationship("Estanque")
+
+
+class AlimentacionPeces(Base):
+    __tablename__ = "alimentacion_peces"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    estanque_id = Column(Integer, ForeignKey("estanques.id", ondelete="CASCADE"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    tipo_alimento = Column(String(100), nullable=False)
+    cantidad_kg = Column(DECIMAL(10, 2), nullable=False)
+    frecuencia_diaria = Column(Integer, default=1)
+    created_at = Column(DateTime, server_default=func.now())
+
+    estanque = relationship("Estanque")
+
+
 class RegistroClimatico(Base):
     __tablename__ = "registros_climaticos"
     id = Column(Integer, primary_key=True, autoincrement=True)

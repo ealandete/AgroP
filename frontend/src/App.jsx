@@ -40,6 +40,7 @@ import Agua from './pages/Agua.jsx'
 import Alimentacion from './pages/Alimentacion.jsx'
 import Bioseguridad from './pages/Bioseguridad.jsx'
 import Certificaciones from './pages/Certificaciones.jsx'
+import Picicultura from './pages/Picicultura.jsx'
 import InicioPropietario from './pages/InicioPropietario.jsx'
 import InicioCapataz from './pages/InicioCapataz.jsx'
 import InicioVeterinario from './pages/InicioVeterinario.jsx'
@@ -111,6 +112,7 @@ export default function App() {
           <Route path="alimentacion" element={<Alimentacion />} />
           <Route path="bioseguridad" element={<Bioseguridad />} />
           <Route path="certificaciones" element={<Certificaciones />} />
+          <Route path="picicultura" element={<Picicultura />} />
           <Route path="inicio-propietario" element={<InicioPropietario />} />
           <Route path="inicio-capataz" element={<InicioCapataz />} />
           <Route path="inicio-veterinario" element={<InicioVeterinario />} />

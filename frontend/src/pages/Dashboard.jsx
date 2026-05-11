@@ -451,6 +451,7 @@ function ProximasActividadesWidget() {
 }
 
 function AlertasRecientesWidget() {
+  const navigate = useNavigate()
   const [alertas, setAlertas] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -461,6 +462,18 @@ function AlertasRecientesWidget() {
       .finally(() => setLoading(false))
   }, [])
 
+  const getAlertaRoute = (tipo) => {
+    switch (tipo) {
+      case 'inventario': return '/inventario'
+      case 'sanitaria':
+      case 'vacuna':
+      case 'peso':
+      case 'pesaje': return '/animales'
+      case 'cosecha': return '/cultivos'
+      default: return '/alertas'
+    }
+  }
+
   if (loading) return <Skeleton height={160} />
 
   return (
@@ -469,19 +482,29 @@ function AlertasRecientesWidget() {
       {alertas.length === 0 ? (
         <Text size="sm" c="dimmed" ta="center" py="md">Sin alertas pendientes</Text>
       ) : (
-        <ScrollArea h={160}>
+        <ScrollArea h={200}>
           <Stack gap={6}>
             {alertas.map((a, i) => (
-              <Group key={i} gap={4} wrap="nowrap">
-                <ThemeIcon variant="light" size="sm" radius="xl" color={a.tipo === 'sanitaria' ? 'red' : a.tipo === 'inventario' ? 'orange' : 'blue'}>
-                  <IconAlertTriangle size={12} />
-                </ThemeIcon>
-                <Box style={{ flex: 1 }}>
-                  <Text size="xs" lineClamp={1}>{a.mensaje || a.descripcion || 'Alerta'}</Text>
-                  <Text size="10px" c="dimmed">{a.fecha ? new Date(a.fecha).toLocaleString('es-CO') : ''}</Text>
-                </Box>
-                <Badge size="sm" variant="light" color={a.tipo === 'sanitaria' ? 'red' : a.tipo === 'inventario' ? 'orange' : 'blue'}>{a.tipo}</Badge>
-              </Group>
+              <Paper
+                key={i}
+                p="xs"
+                radius="sm"
+                withBorder
+                style={{ cursor: 'pointer' }}
+                onClick={() => navigate(getAlertaRoute(a.tipo))}
+              >
+                <Group gap={4} wrap="nowrap">
+                  <ThemeIcon variant="light" size="sm" radius="xl" color={a.tipo === 'sanitaria' ? 'red' : a.tipo === 'inventario' ? 'orange' : 'blue'}>
+                    <IconAlertTriangle size={12} />
+                  </ThemeIcon>
+                  <Box style={{ flex: 1, minWidth: 0 }}>
+                    <Text size="xs" fw={600} lineClamp={1}>{a.titulo || a.mensaje || 'Alerta'}</Text>
+                    <Text size="10px" c="dimmed" lineClamp={1}>{a.descripcion || ''}</Text>
+                    <Text size="10px" c="dimmed">{a.fecha ? new Date(a.fecha).toLocaleString('es-CO') : ''}</Text>
+                  </Box>
+                  <Badge size="sm" variant="light" color={a.tipo === 'sanitaria' ? 'red' : a.tipo === 'inventario' ? 'orange' : 'blue'}>{a.tipo}</Badge>
+                </Group>
+              </Paper>
             ))}
           </Stack>
         </ScrollArea>
@@ -535,6 +558,7 @@ function ClimaWidget() {
 }
 
 function MapaRapidoWidget() {
+  const navigate = useNavigate()
   const [lotes, setLotes] = useState([])
   const [loading, setLoading] = useState(true)
   const fincaId = localStorage.getItem('agrop_finca_id')
@@ -560,7 +584,7 @@ function MapaRapidoWidget() {
   if (loading) return <Skeleton height={200} />
 
   return (
-    <Paper p="md" radius="md" withBorder>
+    <Paper p="md" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate('/lotes')}>
       <WidgetHeader widget={WIDGET_DEFS.mapa_rapido} />
       <Box style={{ height: 180, borderRadius: 8, overflow: 'hidden' }}>
         <MapContainer center={center} zoom={14} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
