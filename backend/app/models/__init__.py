@@ -1002,6 +1002,31 @@ class Presupuesto(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
+class Alert(Base):
+    __tablename__ = "alertas"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=True)
+    tipo = Column(String(30), nullable=False, index=True)
+    titulo = Column(String(255), nullable=False)
+    descripcion = Column(Text)
+    severidad = Column(String(20), default="media", index=True)
+    leida = Column(Boolean, default=False, index=True)
+    resuelta = Column(Boolean, default=False, index=True)
+    resuelta_en = Column(DateTime, nullable=True)
+    referencia_tabla = Column(String(50))
+    referencia_id = Column(Integer)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class WebhookConfig(Base):
+    __tablename__ = "webhooks_config"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    url = Column(String(500), nullable=False)
+    eventos = Column(String(500), nullable=False)
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+
 class PresupuestoPartida(Base):
     __tablename__ = "presupuesto_partidas"
     id = Column(Integer, primary_key=True, autoincrement=True)

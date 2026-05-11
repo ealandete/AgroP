@@ -307,10 +307,19 @@ function PolygonEditor({ lot, onSave, onCancel }) {
   )
 }
 
+function validateLotForm(form) {
+  const errors = {}
+  if (!form.nombre?.trim()) errors.nombre = 'El nombre es obligatorio'
+  if (!form.finca_id) errors.finca_id = 'La finca es obligatoria'
+  if (form.area_ha !== '' && form.area_ha !== null && Number(form.area_ha) <= 0) errors.area_ha = 'El área debe ser mayor a 0'
+  return errors
+}
+
 function LotForm({ form, setForm, onSave, onCancel, saving, isNew, onStartDrawing }) {
   const set = (key, value) => setForm(prev => ({ ...prev, [key]: value }))
   const [coordText, setCoordText] = useState('')
   const [coordError, setCoordError] = useState('')
+  const [errors, setErrors] = useState({})
 
   useEffect(() => {
     if (form.coordenadas && typeof form.coordenadas === 'object') {
@@ -340,13 +349,32 @@ function LotForm({ form, setForm, onSave, onCancel, saving, isNew, onStartDrawin
     }
   }
 
+  const setAndValidate = (field, value) => {
+    set(field, value)
+    const updated = { ...form, [field]: value }
+    const newErrors = { ...errors }
+    const allErrors = validateLotForm(updated)
+    if (allErrors[field]) newErrors[field] = allErrors[field]
+    else delete newErrors[field]
+    setErrors(newErrors)
+  }
+
+  const isFormValid = Object.keys(validateLotForm(form)).length === 0
+
+  const handleSave = () => {
+    const validationErrors = validateLotForm(form)
+    setErrors(validationErrors)
+    if (Object.keys(validationErrors).length > 0) return
+    onSave()
+  }
+
   return (
     <ScrollArea h={520}>
       <Stack gap="md">
-        <SimpleGrid cols={2} spacing="xs">
-          <TextInput label="Nombre" value={form.nombre} onChange={e => set('nombre', e.target.value)} required />
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+          <TextInput label="Nombre" value={form.nombre} onChange={e => setAndValidate('nombre', e.target.value)} required error={errors.nombre} />
           <TextInput label="Código" value={form.codigo} onChange={e => set('codigo', e.target.value)} />
-          <NumberInput label="Área (ha)" value={form.area_ha} onChange={v => set('area_ha', v)} min={0} />
+          <NumberInput label="Área (ha)" value={form.area_ha} onChange={v => setAndValidate('area_ha', v)} min={0} error={errors.area_ha} />
           <NumberInput label="Altitud (msnm)" value={form.altitud_msnm || ''} onChange={v => set('altitud_msnm', v)} />
           <Select label="Tipo Suelo" data={SUELOS} value={form.tipo_suelo} onChange={v => set('tipo_suelo', v)} />
           <Select label="Uso Actual" data={USOS} value={form.uso_actual} onChange={v => set('uso_actual', v)} />
@@ -359,7 +387,7 @@ function LotForm({ form, setForm, onSave, onCancel, saving, isNew, onStartDrawin
           <TextInput label="Longitud" value={form.longitud} onChange={e => set('longitud', e.target.value)} />
           <Select label="Color" data={COLORES} value={form.color} onChange={v => set('color', v)} />
           {isNew && (
-            <TextInput label="Finca ID" value={form.finca_id} onChange={e => set('finca_id', parseInt(e.target.value) || '')} />
+            <TextInput label="Finca ID" value={form.finca_id} onChange={e => setAndValidate('finca_id', parseInt(e.target.value) || '')} required error={errors.finca_id} />
           )}
         </SimpleGrid>
 
@@ -389,7 +417,7 @@ function LotForm({ form, setForm, onSave, onCancel, saving, isNew, onStartDrawin
 
         <Group justify="flex-end" mt="sm">
           <Button variant="default" onClick={onCancel}>Cancelar</Button>
-          <Button onClick={onSave} loading={saving}>Guardar</Button>
+          <Button onClick={handleSave} loading={saving} disabled={!isFormValid}>Guardar</Button>
         </Group>
       </Stack>
     </ScrollArea>
@@ -631,78 +659,80 @@ export default function Lotes() {
                     {search || usoFiltro ? 'Sin resultados' : 'No hay lotes registrados'}
                   </Text>
                 ) : (
-                  <Table>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Nombre</Table.Th>
-                        <Table.Th>Código</Table.Th>
-                        <Table.Th>Área</Table.Th>
-                        <Table.Th>Uso Actual</Table.Th>
-                        <Table.Th>Cultivos</Table.Th>
-                        <Table.Th>Polígono</Table.Th>
-                        <Table.Th>Acciones</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {filtered.map(l => (
-                        <Table.Tr
-                          key={l.id}
-                          style={{ cursor: 'pointer' }}
-                          bg={selectedLote?.id === l.id ? 'green.0' : undefined}
-                          onClick={() => handleSelect(l)}
-                        >
-                          <Table.Td><Text size="sm" fw={500}>{l.nombre}</Text></Table.Td>
-                          <Table.Td><Text size="sm">{l.codigo || '—'}</Text></Table.Td>
-                          <Table.Td>
-                            <Text size="sm">{l.area_ha != null ? `${formatNumber(l.area_ha)} ha` : '—'}</Text>
-                          </Table.Td>
-                          <Table.Td>
-                            <Badge size="sm" variant="light" color={USO_COLORS[l.uso_actual] || 'gray'}>
-                              {l.uso_actual || '—'}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td><Text size="sm">{cultivoCounts[l.id] || 0}</Text></Table.Td>
-                          <Table.Td>
-                            {l.coordenadas?.type === 'Polygon' ? (
-                              <IconCheck size={16} color="green" />
-                            ) : (
-                              <IconX size={16} color="red" />
-                            )}
-                          </Table.Td>
-                          <Table.Td>
-                            <Group gap={4} wrap="nowrap">
-                              <Tooltip label="Editar">
-                                <ActionIcon
-                                  variant="light" color="blue" size="sm"
-                                  onClick={e => { e.stopPropagation(); handleEdit(l) }}
-                                >
-                                  <IconEdit size={14} />
-                                </ActionIcon>
-                              </Tooltip>
-                              <Tooltip label="Ver en mapa">
-                                <ActionIcon
-                                  variant="light" color="green" size="sm"
-                                  onClick={e => { e.stopPropagation(); handleViewOnMap(l) }}
-                                >
-                                  <IconEye size={14} />
-                                </ActionIcon>
-                              </Tooltip>
-                              {l.coordenadas?.type === 'Polygon' && (
-                                <Tooltip label="Editar polígono">
+                  <div style={{ overflowX: 'auto' }}>
+                    <Table>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>Nombre</Table.Th>
+                          <Table.Th visibleFrom="sm">Código</Table.Th>
+                          <Table.Th>Área</Table.Th>
+                          <Table.Th visibleFrom="sm">Uso Actual</Table.Th>
+                          <Table.Th visibleFrom="sm">Cultivos</Table.Th>
+                          <Table.Th>Polígono</Table.Th>
+                          <Table.Th>Acciones</Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {filtered.map(l => (
+                          <Table.Tr
+                            key={l.id}
+                            style={{ cursor: 'pointer' }}
+                            bg={selectedLote?.id === l.id ? 'green.0' : undefined}
+                            onClick={() => handleSelect(l)}
+                          >
+                            <Table.Td><Text size="sm" fw={500}>{l.nombre}</Text></Table.Td>
+                            <Table.Td visibleFrom="sm"><Text size="sm">{l.codigo || '—'}</Text></Table.Td>
+                            <Table.Td>
+                              <Text size="sm">{l.area_ha != null ? `${formatNumber(l.area_ha)} ha` : '—'}</Text>
+                            </Table.Td>
+                            <Table.Td visibleFrom="sm">
+                              <Badge size="sm" variant="light" color={USO_COLORS[l.uso_actual] || 'gray'}>
+                                {l.uso_actual || '—'}
+                              </Badge>
+                            </Table.Td>
+                            <Table.Td visibleFrom="sm"><Text size="sm">{cultivoCounts[l.id] || 0}</Text></Table.Td>
+                            <Table.Td>
+                              {l.coordenadas?.type === 'Polygon' ? (
+                                <IconCheck size={16} color="green" />
+                              ) : (
+                                <IconX size={16} color="red" />
+                              )}
+                            </Table.Td>
+                            <Table.Td>
+                              <Group gap={4} wrap="nowrap">
+                                <Tooltip label="Editar">
                                   <ActionIcon
-                                    variant="light" color="orange" size="sm"
-                                    onClick={e => { e.stopPropagation(); handleStartEditPolygon(l) }}
+                                    variant="light" color="blue" size="sm"
+                                    onClick={e => { e.stopPropagation(); handleEdit(l) }}
                                   >
-                                    <IconEditCircle size={14} />
+                                    <IconEdit size={14} />
                                   </ActionIcon>
                                 </Tooltip>
-                              )}
-                            </Group>
-                          </Table.Td>
-                        </Table.Tr>
-                      ))}
-                    </Table.Tbody>
-                  </Table>
+                                <Tooltip label="Ver en mapa">
+                                  <ActionIcon
+                                    variant="light" color="green" size="sm"
+                                    onClick={e => { e.stopPropagation(); handleViewOnMap(l) }}
+                                  >
+                                    <IconEye size={14} />
+                                  </ActionIcon>
+                                </Tooltip>
+                                {l.coordenadas?.type === 'Polygon' && (
+                                  <Tooltip label="Editar polígono">
+                                    <ActionIcon
+                                      variant="light" color="orange" size="sm"
+                                      onClick={e => { e.stopPropagation(); handleStartEditPolygon(l) }}
+                                    >
+                                      <IconEditCircle size={14} />
+                                    </ActionIcon>
+                                  </Tooltip>
+                                )}
+                              </Group>
+                            </Table.Td>
+                          </Table.Tr>
+                        ))}
+                      </Table.Tbody>
+                    </Table>
+                  </div>
                 )}
               </ScrollArea>
             </Paper>

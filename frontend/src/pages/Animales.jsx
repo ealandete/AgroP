@@ -16,6 +16,16 @@ const ESTADOS_ORIGEN = [
   { value: 'consignacion', label: 'Consignación', color: 'cyan' },
 ]
 
+function validateAnimalForm(form) {
+  const errors = {}
+  if (!form.codigo?.trim()) errors.codigo = 'El código es obligatorio'
+  if (!form.especie) errors.especie = 'La especie es obligatoria'
+  if (!form.sexo) errors.sexo = 'El sexo es obligatorio'
+  if (!form.fecha_ingreso) errors.fecha_ingreso = 'La fecha de ingreso es obligatoria'
+  if (form.peso_kg !== '' && form.peso_kg !== null && Number(form.peso_kg) <= 0) errors.peso_kg = 'El peso debe ser mayor a 0'
+  return errors
+}
+
 export default function Animales() {
   const navigate = useNavigate()
   const [animales, setAnimales] = useState([])
@@ -29,6 +39,7 @@ export default function Animales() {
   const [search, setSearch] = useState('')
   const [filtroEspecie, setFiltroEspecie] = useState('')
   const [filtroGrupo, setFiltroGrupo] = useState('')
+  const [errors, setErrors] = useState({})
   const [form, setForm] = useState({ especie:'bovino', sexo:'H', codigo:'', nombre:'', raza_id:'', lote_id:'', grupo_manejo_id:'', peso_kg:'', color:'', fecha_nacimiento:'', fecha_ingreso: new Date().toISOString().split('T')[0], numero_chapeta:'', tiene_chapeta:false, microchip_id:'', estado_origen:'propio' })
 
   const loadData = () => {
@@ -47,18 +58,24 @@ export default function Animales() {
     return true
   })
 
+  const isFormValid = Object.keys(validateAnimalForm(form)).length === 0
+
   const handleSubmit = async () => {
+    const validationErrors = validateAnimalForm(form)
+    setErrors(validationErrors)
+    if (Object.keys(validationErrors).length > 0) return
     try {
       if (editando) { await api.put(`/animales/${editando}`, form) }
       else { await api.post('/animales/', form) }
       notifications.show({ title: editando ? 'Actualizado' : 'Creado', color: 'green' })
-      close(); setEditando(null); loadData()
+      close(); setEditando(null); setErrors({}); loadData()
     } catch (err) { notifications.show({ title: 'Error', color: 'red' }) }
   }
 
   const openEdit = (a) => {
     setEditando(a.id)
     setForm({ especie:a.especie||'bovino', sexo:a.sexo||'H', codigo:a.codigo||'', nombre:a.nombre||'', raza_id:a.raza_id?.toString()||'', lote_id:a.lote_id?.toString()||'', grupo_manejo_id:a.grupo_manejo_id?.toString()||'', peso_kg:a.peso_kg||'', color:a.color||'', fecha_nacimiento:a.fecha_nacimiento||'', fecha_ingreso:a.fecha_ingreso||new Date().toISOString().split('T')[0], numero_chapeta:a.numero_chapeta||'', tiene_chapeta:a.tiene_chapeta||false, microchip_id:a.microchip_id||'', estado_origen:a.estado_origen||'propio' })
+    setErrors({})
     open()
   }
 
@@ -82,13 +99,23 @@ export default function Animales() {
     URL.revokeObjectURL(url)
   }
 
+  const setAndValidate = (field, value) => {
+    const updated = { ...form, [field]: value }
+    setForm(updated)
+    const newErrors = { ...errors }
+    const allErrors = validateAnimalForm(updated)
+    if (allErrors[field]) newErrors[field] = allErrors[field]
+    else delete newErrors[field]
+    setErrors(newErrors)
+  }
+
   return (
     <Stack>
       <Group justify="space-between">
         <Title order={3}>Animales ({filtered.length})</Title>
         <Group>
           <Button leftSection={<IconFileDownload size={16} />} variant="default" onClick={handleExportCSV}>Exportar</Button>
-          <Button leftSection={<IconPlus size={16} />} onClick={() => { setEditando(null); setForm({...form,codigo:'',nombre:''}); open() }}>Nuevo</Button>
+          <Button leftSection={<IconPlus size={16} />} onClick={() => { setEditando(null); setForm({...form,codigo:'',nombre:''}); setErrors({}); open() }}>Nuevo</Button>
         </Group>
       </Group>
 
@@ -98,7 +125,7 @@ export default function Animales() {
         <Select placeholder="Grupo" data={grupos.map(g => ({ value: g.id.toString(), label: g.nombre }))} value={filtroGrupo} onChange={v => setFiltroGrupo(v||'')} clearable w={180} />
       </Group>
 
-      <Paper withBorder>
+      <Paper withBorder style={{ overflowX: 'auto' }}>
         <Table striped highlightOnHover>
           <Table.Thead><Table.Tr><Table.Th>Código</Table.Th><Table.Th>Nombre</Table.Th><Table.Th>Especie</Table.Th><Table.Th>Raza</Table.Th><Table.Th>Sexo</Table.Th><Table.Th>Peso</Table.Th><Table.Th>Chapeta</Table.Th><Table.Th>Estado</Table.Th><Table.Th>Origen</Table.Th><Table.Th>Acciones</Table.Th></Table.Tr></Table.Thead>
           <Table.Tbody>
@@ -134,29 +161,31 @@ export default function Animales() {
         </Table>
       </Paper>
 
-      <Modal opened={opened} onClose={close} title={editando?'Editar':'Nuevo'} size="lg">
-        <SimpleGrid cols={2}>
-          <TextInput label="Código" value={form.codigo} onChange={e=>setForm({...form,codigo:e.target.value})} required />
+      <Modal opened={opened} onClose={close} title={editando?'Editar Animal':'Nuevo Animal'} size="lg">
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <TextInput label="Código" value={form.codigo} onChange={e=>setAndValidate('codigo',e.target.value)} required error={errors.codigo} />
           <TextInput label="Nombre" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})} />
-          <Select label="Especie" data={ESPECIES_LIST} value={form.especie} onChange={v=>setForm({...form,especie:v})} />
-          <Select label="Sexo" data={[{value:'H',label:'Hembra'},{value:'M',label:'Macho'}]} value={form.sexo} onChange={v=>setForm({...form,sexo:v})} />
+          <Select label="Especie" data={ESPECIES_LIST} value={form.especie} onChange={v=>setAndValidate('especie',v)} required error={errors.especie} />
+          <Select label="Sexo" data={[{value:'H',label:'Hembra'},{value:'M',label:'Macho'}]} value={form.sexo} onChange={v=>setAndValidate('sexo',v)} required error={errors.sexo} />
           <Select label="Raza" data={razas.filter(r=>r.especie===form.especie).map(r=>({value:r.id.toString(),label:r.nombre}))} value={form.raza_id} onChange={v=>setForm({...form,raza_id:v})} clearable />
           <Select label="Grupo Manejo" data={grupos.map(g=>({value:g.id.toString(),label:g.nombre}))} value={form.grupo_manejo_id} onChange={v=>setForm({...form,grupo_manejo_id:v})} clearable />
           <Select label="Origen" data={ESTADOS_ORIGEN.map(e=>({value:e.value,label:e.label}))} value={form.estado_origen||'propio'} onChange={v=>setForm({...form,estado_origen:v})} />
           <TextInput label="Nro Chapeta" value={form.numero_chapeta} onChange={e=>setForm({...form,numero_chapeta:e.target.value})} />
           <TextInput label="Microchip" value={form.microchip_id} onChange={e=>setForm({...form,microchip_id:e.target.value})} />
           <TextInput label="Color" value={form.color} onChange={e=>setForm({...form,color:e.target.value})} />
-          <NumberInput label="Peso (kg)" value={form.peso_kg} onChange={v=>setForm({...form,peso_kg:v})} />
+          <NumberInput label="Peso (kg)" value={form.peso_kg} onChange={v=>setAndValidate('peso_kg',v)} error={errors.peso_kg} min={0} />
           <TextInput label="F. Nacimiento" type="date" value={form.fecha_nacimiento} onChange={e=>setForm({...form,fecha_nacimiento:e.target.value})} />
-          <TextInput label="F. Ingreso" type="date" value={form.fecha_ingreso} onChange={e=>setForm({...form,fecha_ingreso:e.target.value})} required />
+          <TextInput label="F. Ingreso" type="date" value={form.fecha_ingreso} onChange={e=>setAndValidate('fecha_ingreso',e.target.value)} required error={errors.fecha_ingreso} />
         </SimpleGrid>
-        <Group justify="flex-end" mt="xl"><Button variant="default" onClick={close}>Cancelar</Button><Button onClick={handleSubmit}>{editando?'Guardar':'Crear'}</Button></Group>
+        <Group justify="flex-end" mt="xl"><Button variant="default" onClick={close}>Cancelar</Button><Button onClick={handleSubmit} disabled={!isFormValid}>{editando?'Guardar':'Crear'}</Button></Group>
       </Modal>
 
       <Modal opened={eventOpened} onClose={closeEv} title={`Eventos: ${selected?.nombre||selected?.codigo||''}`} size="lg">
-        <Table><Table.Thead><Table.Tr><Table.Th>Fecha</Table.Th><Table.Th>Tipo</Table.Th><Table.Th>Diagnóstico</Table.Th><Table.Th>Costo</Table.Th></Table.Tr></Table.Thead>
-        <Table.Tbody>{eventos.map(e=>(<Table.Tr key={e.id}><Table.Td>{e.fecha}</Table.Td><Table.Td><Badge size="sm">{e.tipo_evento}</Badge></Table.Td><Table.Td>{e.diagnostico||'-'}</Table.Td><Table.Td>{e.costo?formatCOP(e.costo):'-'}</Table.Td></Table.Tr>))}
-        {eventos.length===0&&<Table.Tr><Table.Td colSpan={4}><Text c="dimmed" ta="center">Sin eventos</Text></Table.Td></Table.Tr>}</Table.Tbody></Table>
+        <div style={{ overflowX: 'auto' }}>
+          <Table><Table.Thead><Table.Tr><Table.Th>Fecha</Table.Th><Table.Th>Tipo</Table.Th><Table.Th>Diagnóstico</Table.Th><Table.Th>Costo</Table.Th></Table.Tr></Table.Thead>
+          <Table.Tbody>{eventos.map(e=>(<Table.Tr key={e.id}><Table.Td>{e.fecha}</Table.Td><Table.Td><Badge size="sm">{e.tipo_evento}</Badge></Table.Td><Table.Td>{e.diagnostico||'-'}</Table.Td><Table.Td>{e.costo?formatCOP(e.costo):'-'}</Table.Td></Table.Tr>))}
+          {eventos.length===0&&<Table.Tr><Table.Td colSpan={4}><Text c="dimmed" ta="center">Sin eventos</Text></Table.Td></Table.Tr>}</Table.Tbody></Table>
+        </div>
       </Modal>
     </Stack>
   )

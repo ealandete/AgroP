@@ -726,3 +726,55 @@ class InsumoUpdate(BaseModel):
 class ProduccionUpdate(BaseModel):
     cantidad: Optional[float] = None
     observaciones: Optional[str] = None
+
+
+# ─── Alertas ─────────────────────────────────────────────────
+
+class AlertOut(BaseModel):
+    id: int
+    finca_id: Optional[int] = None
+    tipo: str
+    titulo: str
+    descripcion: Optional[str] = None
+    severidad: str
+    leida: bool = False
+    resuelta: bool = False
+    resuelta_en: Optional[datetime] = None
+    referencia_tabla: Optional[str] = None
+    referencia_id: Optional[int] = None
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class WebhookConfigCreate(BaseModel):
+    url: str
+    eventos: str
+
+
+class WebhookConfigUpdate(BaseModel):
+    url: Optional[str] = None
+    eventos: Optional[str] = None
+    activo: Optional[bool] = None
+
+
+class WebhookConfigOut(BaseModel):
+    id: int
+    url: str
+    eventos: str
+    activo: bool = True
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TelegramConfig(BaseModel):
+    bot_token: str = ""
+    chat_id: str = ""
+
+
+class DispararWebhookRequest(BaseModel):
+    evento: str
+    datos: Optional[dict] = None

@@ -45,7 +45,8 @@ def obtener_siembra(siembra_id: int, db: Session = Depends(get_db), current_user
 
 @router.post("/", response_model=SiembraOut, status_code=201)
 def crear_siembra(payload: SiembraCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    siembra = Siembra(**payload.model_dump())
+    data = {k: v for k, v in payload.model_dump().items() if hasattr(Siembra, k)}
+    siembra = Siembra(**data)
     db.add(siembra)
     db.commit()
     db.refresh(siembra)
@@ -57,7 +58,7 @@ def actualizar_siembra(siembra_id: int, payload: SiembraCreate, db: Session = De
     siembra = db.query(Siembra).filter(Siembra.id == siembra_id).first()
     if not siembra:
         raise HTTPException(status_code=404, detail="Siembra no encontrada")
-    for k, v in payload.model_dump().items():
+    for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(siembra, k, v)
     db.commit()
     db.refresh(siembra)

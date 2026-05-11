@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
-  AppShell, Group, Text, NavLink, Burger,
-  useMantineTheme, Avatar, Menu,
+  AppShell, Group, Text, NavLink, Burger, Box,
+  useMantineTheme, Avatar, Menu, Select as MantineSelect,
 } from '@mantine/core'
-import { useDisclosure } from '@mantine/hooks'
+import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import {
   IconDashboard, IconPig, IconPlant, IconMap, IconCoin,
   IconPackage, IconChartBar, IconLogout, IconUser, IconSettings,
@@ -74,6 +74,7 @@ export default function Layout() {
   const [fincas, setFincas] = useState([])
   const [fincaActiva, setFincaActiva] = useState(() => localStorage.getItem('agrop_finca_id') || '')
   const [fincaDetails, setFincaDetails] = useState(null)
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   useEffect(() => {
     api.get('/lotes/fincas/').then(r => {
@@ -121,33 +122,43 @@ export default function Layout() {
     <AppShell
       header={{ height: 60 }}
       navbar={{ width: 260, breakpoint: 'sm', collapsed: { mobile: !opened } }}
-      padding="md"
+      padding={{ base: 'xs', sm: 'md' }}
     >
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
+        <Group h="100%" px={{ base: 'xs', sm: 'md' }} justify="space-between">
           <Group>
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <IconPlant size={28} color={theme.colors.green[7]} />
             <Text fw={700} size="lg" c="green.8">AgroP</Text>
-            <Menu shadow="md" width={220}>
-              <Menu.Target>
-                <Group gap={4} style={{ cursor: 'pointer' }}>
-                  <IconBuildingEstate size={18} color={theme.colors.green[6]} />
-                  <Text size="sm" fw={500}>{fincaDetails?.nombre || fincas.find(f => f.id.toString() === fincaActiva)?.nombre || 'Finca'}</Text>
-                </Group>
-              </Menu.Target>
-              <Menu.Dropdown>
-                {fincas.map(f => (
-                  <Menu.Item
-                    key={f.id}
-                    onClick={() => cambiarFinca(f.id.toString())}
-                    leftSection={f.id.toString() === fincaActiva ? <IconCheck size={16} /> : null}
-                  >
-                    {f.nombre}
-                  </Menu.Item>
-                ))}
-              </Menu.Dropdown>
-            </Menu>
+            {isMobile ? (
+              <MantineSelect
+                data={fincas.map(f => ({ value: f.id.toString(), label: f.nombre }))}
+                value={fincaActiva}
+                onChange={cambiarFinca}
+                size="xs"
+                w={140}
+              />
+            ) : (
+              <Menu shadow="md" width={220}>
+                <Menu.Target>
+                  <Group gap={4} style={{ cursor: 'pointer' }}>
+                    <IconBuildingEstate size={18} color={theme.colors.green[6]} />
+                    <Text size="sm" fw={500}>{fincaDetails?.nombre || fincas.find(f => f.id.toString() === fincaActiva)?.nombre || 'Finca'}</Text>
+                  </Group>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  {fincas.map(f => (
+                    <Menu.Item
+                      key={f.id}
+                      onClick={() => cambiarFinca(f.id.toString())}
+                      leftSection={f.id.toString() === fincaActiva ? <IconCheck size={16} /> : null}
+                    >
+                      {f.nombre}
+                    </Menu.Item>
+                  ))}
+                </Menu.Dropdown>
+              </Menu>
+            )}
           </Group>
           <Menu shadow="md" width={220}>
             <Menu.Target>
@@ -185,7 +196,7 @@ export default function Layout() {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="sm">
+      <AppShell.Navbar p={{ base: 'xs', sm: 'sm' }}>
         {(() => {
           const sections = {
             core: { label: 'PRODUCCIÓN', color: 'green' },
@@ -224,7 +235,9 @@ export default function Layout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Breadcrumbs items={getBreadcrumbItems()} />
+        <Box hiddenFrom="xs" mb="xs">
+          <Breadcrumbs items={getBreadcrumbItems()} />
+        </Box>
         <Outlet />
       </AppShell.Main>
     </AppShell>

@@ -32,6 +32,15 @@ const initialForm = {
   metodo_siembra: 'directa', estado: 'activo', observaciones: '',
 }
 
+function validateSiembraForm(form) {
+  const errors = {}
+  if (!form.cultivo) errors.cultivo = 'El cultivo es obligatorio'
+  if (!form.lote_id) errors.lote_id = 'El lote es obligatorio'
+  if (!form.fecha_siembra) errors.fecha_siembra = 'La fecha de siembra es obligatoria'
+  if (form.area_ha !== '' && form.area_ha !== null && Number(form.area_ha) <= 0) errors.area_ha = 'El área debe ser mayor a 0'
+  return errors
+}
+
 export default function Cultivos() {
   const navigate = useNavigate()
   const [siembras, setSiembras] = useState([])
@@ -53,6 +62,8 @@ export default function Cultivos() {
   const [nuevaForm, setNuevaForm] = useState({ ...initialForm })
   const [editForm, setEditForm] = useState({})
   const [editId, setEditId] = useState(null)
+  const [nuevaErrors, setNuevaErrors] = useState({})
+  const [editErrors, setEditErrors] = useState({})
   const [cosechaForm, setCosechaForm] = useState({
     fecha: new Date().toISOString().split('T')[0], cantidad_kg: '',
     calidad: '', humedad_pct: '', metodo: '', destino: '', observaciones: '',
@@ -116,12 +127,28 @@ export default function Cultivos() {
     return { activas, areaTotal, rendimientoPromedio }
   }, [siembras])
 
+  const setNuevaField = (field, value) => {
+    const updated = { ...nuevaForm, [field]: value }
+    setNuevaForm(updated)
+    const newErrors = { ...nuevaErrors }
+    const allErrors = validateSiembraForm(updated)
+    if (allErrors[field]) newErrors[field] = allErrors[field]
+    else delete newErrors[field]
+    setNuevaErrors(newErrors)
+  }
+
+  const isNuevaValid = Object.keys(validateSiembraForm(nuevaForm)).length === 0
+
   const handleNuevaSiembra = async () => {
+    const validationErrors = validateSiembraForm(nuevaForm)
+    setNuevaErrors(validationErrors)
+    if (Object.keys(validationErrors).length > 0) return
     try {
       await api.post('/cultivos/', nuevaForm)
       notifications.show({ title: 'Siembra registrada', color: 'green' })
       closeNueva()
       setNuevaForm({ ...initialForm })
+      setNuevaErrors({})
       loadData()
     } catch (err) {
       notifications.show({ title: 'Error', message: err.response?.data?.detail, color: 'red' })
@@ -142,15 +169,32 @@ export default function Cultivos() {
       estado: s.estado || 'activo',
       observaciones: s.observaciones || '',
     })
+    setEditErrors({})
     openEdit()
   }
 
+  const setEditField = (field, value) => {
+    const updated = { ...editForm, [field]: value }
+    setEditForm(updated)
+    const newErrors = { ...editErrors }
+    const allErrors = validateSiembraForm(updated)
+    if (allErrors[field]) newErrors[field] = allErrors[field]
+    else delete newErrors[field]
+    setEditErrors(newErrors)
+  }
+
+  const isEditValid = Object.keys(validateSiembraForm(editForm)).length === 0
+
   const handleUpdateSiembra = async () => {
+    const validationErrors = validateSiembraForm(editForm)
+    setEditErrors(validationErrors)
+    if (Object.keys(validationErrors).length > 0) return
     try {
       await api.put(`/cultivos/${editId}`, editForm)
       notifications.show({ title: 'Siembra actualizada', color: 'green' })
       closeEdit()
       setEditId(null)
+      setEditErrors({})
       loadData()
     } catch (err) {
       notifications.show({ title: 'Error', message: err.response?.data?.detail, color: 'red' })
@@ -246,7 +290,7 @@ export default function Cultivos() {
     <Stack>
       <Group justify="space-between">
         <Title order={3}>Gestión de Cultivos</Title>
-        <Button leftSection={<IconPlus size={16} />} onClick={openNueva}>Nueva Siembra</Button>
+        <Button leftSection={<IconPlus size={16} />} onClick={() => { setNuevaErrors({}); openNueva() }}>Nueva Siembra</Button>
       </Group>
 
       <SimpleGrid cols={{ base: 1, sm: 3 }}>
@@ -308,18 +352,18 @@ export default function Cultivos() {
         </Group>
       </Paper>
 
-      <Paper withBorder>
+      <Paper withBorder style={{ overflowX: 'auto' }}>
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Fecha Siembra</Table.Th>
               <Table.Th>Cultivo</Table.Th>
-              <Table.Th>Variedad</Table.Th>
+              <Table.Th visibleFrom="sm">Variedad</Table.Th>
               <Table.Th>Lote</Table.Th>
               <Table.Th>Área (ha)</Table.Th>
               <Table.Th>Estado</Table.Th>
-              <Table.Th>Días</Table.Th>
-              <Table.Th>Act.</Table.Th>
+              <Table.Th visibleFrom="sm">Días</Table.Th>
+              <Table.Th visibleFrom="sm">Act.</Table.Th>
               <Table.Th>Acciones</Table.Th>
             </Table.Tr>
           </Table.Thead>
@@ -335,7 +379,7 @@ export default function Cultivos() {
                 <Table.Tr key={s.id}>
                   <Table.Td>{s.fecha_siembra}</Table.Td>
                   <Table.Td fw={500} tt="capitalize">{s.cultivo}</Table.Td>
-                  <Table.Td>{variedades.find(v => v.id === s.variedad_id)?.variedad || '-'}</Table.Td>
+                  <Table.Td visibleFrom="sm">{variedades.find(v => v.id === s.variedad_id)?.variedad || '-'}</Table.Td>
                   <Table.Td>{loteNombre(s.lote_id)}</Table.Td>
                   <Table.Td>{s.area_ha}</Table.Td>
                   <Table.Td>
@@ -343,12 +387,12 @@ export default function Cultivos() {
                       {s.estado}
                     </Badge>
                   </Table.Td>
-                  <Table.Td>
+                  <Table.Td visibleFrom="sm">
                     <Text size="sm" c={dayjs().diff(dayjs(s.fecha_siembra), 'day') > 365 ? 'red' : 'dimmed'}>
                       {diasDesdeSiembra(s.fecha_siembra)}
                     </Text>
                   </Table.Td>
-                  <Table.Td>
+                  <Table.Td visibleFrom="sm">
                     <Badge size="sm" variant="light" color="teal">
                       {actividadesCount[s.id] || 0}
                     </Badge>
@@ -396,49 +440,46 @@ export default function Cultivos() {
         </Table>
       </Paper>
 
-      {/* Modal Nueva Siembra */}
       <Modal opened={nuevaOpened} onClose={closeNueva} title="Nueva Siembra" size="lg">
-        <SimpleGrid cols={2}>
-          <Select label="Cultivo" data={cultivoOptions} value={nuevaForm.cultivo} onChange={v => setNuevaForm({ ...nuevaForm, cultivo: v })} searchable />
-          <Select label="Lote" data={lotes.map(l => ({ value: l.id.toString(), label: `${l.nombre} (${l.area_ha} ha)` }))} value={nuevaForm.lote_id} onChange={v => setNuevaForm({ ...nuevaForm, lote_id: v })} searchable />
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <Select label="Cultivo" data={cultivoOptions} value={nuevaForm.cultivo} onChange={v => setNuevaField('cultivo', v)} searchable required error={nuevaErrors.cultivo} />
+          <Select label="Lote" data={lotes.map(l => ({ value: l.id.toString(), label: `${l.nombre} (${l.area_ha} ha)` }))} value={nuevaForm.lote_id} onChange={v => setNuevaField('lote_id', v)} searchable required error={nuevaErrors.lote_id} />
           <Select label="Variedad" data={variedades.filter(v => v.cultivo === nuevaForm.cultivo).map(v => ({ value: v.id.toString(), label: v.variedad }))} value={nuevaForm.variedad_id} onChange={v => setNuevaForm({ ...nuevaForm, variedad_id: v })} clearable />
           <Select label="Método Siembra" data={METODOS_SIEMBRA} value={nuevaForm.metodo_siembra} onChange={v => setNuevaForm({ ...nuevaForm, metodo_siembra: v })} />
-          <TextInput label="Fecha Siembra" type="date" value={nuevaForm.fecha_siembra} onChange={e => setNuevaForm({ ...nuevaForm, fecha_siembra: e.target.value })} />
+          <TextInput label="Fecha Siembra" type="date" value={nuevaForm.fecha_siembra} onChange={e => setNuevaField('fecha_siembra', e.target.value)} required error={nuevaErrors.fecha_siembra} />
           <TextInput label="Fecha Cosecha Est." type="date" value={nuevaForm.fecha_cosecha_estimada} onChange={e => setNuevaForm({ ...nuevaForm, fecha_cosecha_estimada: e.target.value })} />
-          <NumberInput label="Área (ha)" value={nuevaForm.area_ha} onChange={v => setNuevaForm({ ...nuevaForm, area_ha: v })} min={0} />
+          <NumberInput label="Área (ha)" value={nuevaForm.area_ha} onChange={v => setNuevaField('area_ha', v)} min={0} error={nuevaErrors.area_ha} />
           <NumberInput label="Cantidad Semilla" value={nuevaForm.cantidad_semilla} onChange={v => setNuevaForm({ ...nuevaForm, cantidad_semilla: v })} min={0} />
           <Select label="Estado" data={ESTADOS_FILTRO} value={nuevaForm.estado} onChange={v => setNuevaForm({ ...nuevaForm, estado: v })} />
         </SimpleGrid>
         <Textarea label="Observaciones" value={nuevaForm.observaciones} onChange={e => setNuevaForm({ ...nuevaForm, observaciones: e.target.value })} mt="sm" minRows={2} />
         <Group justify="flex-end" mt="xl">
           <Button variant="default" onClick={closeNueva}>Cancelar</Button>
-          <Button onClick={handleNuevaSiembra}>Guardar</Button>
+          <Button onClick={handleNuevaSiembra} disabled={!isNuevaValid}>Guardar</Button>
         </Group>
       </Modal>
 
-      {/* Modal Editar Siembra */}
       <Modal opened={editOpened} onClose={closeEdit} title="Editar Siembra" size="lg">
-        <SimpleGrid cols={2}>
-          <Select label="Cultivo" data={cultivoOptions} value={editForm.cultivo} onChange={v => setEditForm({ ...editForm, cultivo: v })} searchable />
-          <Select label="Lote" data={lotes.map(l => ({ value: l.id.toString(), label: `${l.nombre} (${l.area_ha} ha)` }))} value={editForm.lote_id} onChange={v => setEditForm({ ...editForm, lote_id: v })} searchable />
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <Select label="Cultivo" data={cultivoOptions} value={editForm.cultivo} onChange={v => setEditField('cultivo', v)} searchable required error={editErrors.cultivo} />
+          <Select label="Lote" data={lotes.map(l => ({ value: l.id.toString(), label: `${l.nombre} (${l.area_ha} ha)` }))} value={editForm.lote_id} onChange={v => setEditField('lote_id', v)} searchable required error={editErrors.lote_id} />
           <Select label="Variedad" data={variedades.filter(v => v.cultivo === editForm.cultivo).map(v => ({ value: v.id.toString(), label: v.variedad }))} value={editForm.variedad_id} onChange={v => setEditForm({ ...editForm, variedad_id: v })} clearable />
           <Select label="Método Siembra" data={METODOS_SIEMBRA} value={editForm.metodo_siembra} onChange={v => setEditForm({ ...editForm, metodo_siembra: v })} />
-          <TextInput label="Fecha Siembra" type="date" value={editForm.fecha_siembra} onChange={e => setEditForm({ ...editForm, fecha_siembra: e.target.value })} />
+          <TextInput label="Fecha Siembra" type="date" value={editForm.fecha_siembra} onChange={e => setEditField('fecha_siembra', e.target.value)} required error={editErrors.fecha_siembra} />
           <TextInput label="Fecha Cosecha Est." type="date" value={editForm.fecha_cosecha_estimada} onChange={e => setEditForm({ ...editForm, fecha_cosecha_estimada: e.target.value })} />
-          <NumberInput label="Área (ha)" value={editForm.area_ha} onChange={v => setEditForm({ ...editForm, area_ha: v })} min={0} />
+          <NumberInput label="Área (ha)" value={editForm.area_ha} onChange={v => setEditField('area_ha', v)} min={0} error={editErrors.area_ha} />
           <NumberInput label="Cantidad Semilla" value={editForm.cantidad_semilla} onChange={v => setEditForm({ ...editForm, cantidad_semilla: v })} min={0} />
           <Select label="Estado" data={ESTADOS_FILTRO} value={editForm.estado} onChange={v => setEditForm({ ...editForm, estado: v })} />
         </SimpleGrid>
         <Textarea label="Observaciones" value={editForm.observaciones} onChange={e => setEditForm({ ...editForm, observaciones: e.target.value })} mt="sm" minRows={2} />
         <Group justify="flex-end" mt="xl">
           <Button variant="default" onClick={closeEdit}>Cancelar</Button>
-          <Button onClick={handleUpdateSiembra}>Actualizar</Button>
+          <Button onClick={handleUpdateSiembra} disabled={!isEditValid}>Actualizar</Button>
         </Group>
       </Modal>
 
-      {/* Modal Registrar Cosecha */}
       <Modal opened={cosechaOpened} onClose={closeCosecha} title="Registrar Cosecha" size="md">
-        <SimpleGrid cols={2}>
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
           <TextInput label="Fecha" type="date" value={cosechaForm.fecha} onChange={e => setCosechaForm({ ...cosechaForm, fecha: e.target.value })} />
           <NumberInput label="Cantidad (kg)" value={cosechaForm.cantidad_kg} onChange={v => setCosechaForm({ ...cosechaForm, cantidad_kg: v })} min={0} />
           <TextInput label="Calidad" value={cosechaForm.calidad} onChange={e => setCosechaForm({ ...cosechaForm, calidad: e.target.value })} />
@@ -453,7 +494,6 @@ export default function Cultivos() {
         </Group>
       </Modal>
 
-      {/* Modal Confirmar Pérdida */}
       <Modal opened={perderOpened} onClose={closePerder} title="Marcar como Perdido" size="sm">
         <Stack align="center" gap="md" py="md">
           <IconAlertTriangle size={48} color="var(--mantine-color-orange-6)" />
@@ -465,7 +505,6 @@ export default function Cultivos() {
         </Group>
       </Modal>
 
-      {/* Modal Confirmar Eliminación */}
       <Modal opened={eliminarOpened} onClose={closeEliminar} title="Eliminar Siembra" size="sm">
         <Stack align="center" gap="md" py="md">
           <IconTrash size={48} color="var(--mantine-color-red-6)" />

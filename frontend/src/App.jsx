@@ -25,6 +25,7 @@ import SST from './pages/SST.jsx'
 import Trabajadores from './pages/Trabajadores.jsx'
 import Consolidado from './pages/Consolidado.jsx'
 import AdminSistema from './pages/AdminSistema.jsx'
+import Alertas from './pages/Alertas.jsx'
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth()
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="trabajadores" element={<Trabajadores />} />
           <Route path="consolidado" element={<Consolidado />} />
           <Route path="admin-sistema" element={<AdminSistema />} />
+          <Route path="alertas" element={<Alertas />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
