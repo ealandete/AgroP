@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   AppShell, Group, Text, NavLink, Burger, Box, Select as MantineSelect,
-  useMantineTheme, Avatar, Menu, Badge,
+  useMantineTheme, Avatar, Menu, Badge, ActionIcon,
 } from '@mantine/core'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import {
@@ -12,13 +12,18 @@ import {
   IconUsers, IconUsersGroup, IconHealthRecognition, IconCalendarEvent, IconClipboardList,
   IconBuildingEstate, IconCheck, IconReportAnalytics, IconFileSpreadsheet,
   IconSearch, IconAlertTriangle, IconMail, IconMedicineSyrup, IconTractor,
-  IconShield, IconCertificate, IconDroplet, IconApple,
+  IconShield, IconCertificate, IconDroplet, IconApple, IconQrcode,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import { useModo } from '../store/ModoContext.jsx'
 import api from '../services/api.js'
 import Breadcrumbs from './Breadcrumbs.jsx'
 import ModoSencillo from './ModoSencillo.jsx'
+import QRScanner from './QRScanner.jsx'
+import WeatherWidget from './WeatherWidget.jsx'
+import HelpButton from './HelpButton.jsx'
+import AIAssistant from './AIAssistant.jsx'
+import Tour from './Tour.jsx'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: IconDashboard, to: '/', section: 'core' },
@@ -124,6 +129,7 @@ export default function Layout() {
   const [fincaDetails, setFincaDetails] = useState(null)
   const isMobile = useMediaQuery('(max-width: 768px)')
 
+  const [qrScannerOpened, setQrScannerOpened] = useState(false)
   const { modoSencillo, toggleModoSencillo } = useModo()
   const effectiveRole = activeRole || role || 'admin'
   const allowedRoutes = ROLE_NAV_ACCESS[effectiveRole] || ROLE_NAV_ACCESS.admin
@@ -234,6 +240,11 @@ export default function Layout() {
               />
             )}
           </Group>
+          <Group gap={4}>
+            <ActionIcon variant="subtle" color="green" size="lg" onClick={() => setQrScannerOpened(true)}>
+              <IconQrcode size={22} />
+            </ActionIcon>
+          </Group>
           <Menu shadow="md" width={220}>
             <Menu.Target>
               <Group gap="xs" style={{ cursor: 'pointer' }}>
@@ -332,6 +343,9 @@ export default function Layout() {
             return items
           })
         })()}
+        <Box mt="auto" px="sm" pt="sm">
+          <WeatherWidget compact />
+        </Box>
       </AppShell.Navbar>
 
       <AppShell.Main>
@@ -346,6 +360,10 @@ export default function Layout() {
         <Outlet />
       </AppShell.Main>
       {modoSencillo && <ModoSencillo />}
+      <QRScanner opened={qrScannerOpened} onClose={() => setQrScannerOpened(false)} />
+      <HelpButton />
+      <AIAssistant />
+      <Tour />
     </AppShell>
   )
 }

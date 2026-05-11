@@ -6,6 +6,7 @@ import { notifications } from '@mantine/notifications'
 import { IconPlus, IconEdit, IconSearch, IconStethoscope, IconFileDescription, IconFileDownload } from '@tabler/icons-react'
 import api from '../services/api.js'
 import { formatCOP, formatNumber } from '../config.js'
+import { useSelection, BulkActionsHeader, BulkCheckbox } from '../components/BulkActions.jsx'
 
 const ESPECIES_LIST = ['bovino','bufalino','porcino','aviar','caprino','ovino','equino']
 
@@ -99,6 +100,12 @@ export default function Animales() {
     URL.revokeObjectURL(url)
   }
 
+  const selection = useSelection(filtered)
+
+  const handleBulkAction = () => {
+    loadData()
+  }
+
   const setAndValidate = (field, value) => {
     const updated = { ...form, [field]: value }
     setForm(updated)
@@ -125,14 +132,23 @@ export default function Animales() {
         <Select placeholder="Grupo" data={grupos.map(g => ({ value: g.id.toString(), label: g.nombre }))} value={filtroGrupo} onChange={v => setFiltroGrupo(v||'')} clearable w={180} />
       </Group>
 
+      <BulkActionsHeader
+        selectedIds={selection.selectedIds}
+        setSelectedIds={selection.setSelectedIds}
+        items={filtered}
+        entityType="animales"
+        onAction={handleBulkAction}
+      />
+
       <Paper withBorder style={{ overflowX: 'auto' }}>
         <Table striped highlightOnHover>
-          <Table.Thead><Table.Tr><Table.Th>Código</Table.Th><Table.Th>Nombre</Table.Th><Table.Th>Especie</Table.Th><Table.Th>Raza</Table.Th><Table.Th>Sexo</Table.Th><Table.Th>Peso</Table.Th><Table.Th>Chapeta</Table.Th><Table.Th>Estado</Table.Th><Table.Th>Origen</Table.Th><Table.Th>Acciones</Table.Th></Table.Tr></Table.Thead>
+          <Table.Thead><Table.Tr><Table.Th w={40}><BulkCheckbox id="__all__" isSelected={() => selection.allSelected} toggle={() => selection.allSelected ? selection.deselectAll() : selection.selectAll()} /></Table.Th><Table.Th>Código</Table.Th><Table.Th>Nombre</Table.Th><Table.Th>Especie</Table.Th><Table.Th>Raza</Table.Th><Table.Th>Sexo</Table.Th><Table.Th>Peso</Table.Th><Table.Th>Chapeta</Table.Th><Table.Th>Estado</Table.Th><Table.Th>Origen</Table.Th><Table.Th>Acciones</Table.Th></Table.Tr></Table.Thead>
           <Table.Tbody>
             {filtered.map(a => {
               const grupoNombre = grupos.find(g => g.id === a.grupo_manejo_id)?.nombre || ''
               return (
-                <Table.Tr key={a.id}>
+                <Table.Tr key={a.id} bg={selection.isSelected(a.id) ? 'grape.0' : undefined}>
+                  <Table.Td><BulkCheckbox id={a.id} isSelected={selection.isSelected} toggle={selection.toggle} /></Table.Td>
                   <Table.Td fw={500}>{a.codigo}</Table.Td>
                   <Table.Td>{a.nombre||'-'}</Table.Td>
                   <Table.Td>{a.especie}</Table.Td>

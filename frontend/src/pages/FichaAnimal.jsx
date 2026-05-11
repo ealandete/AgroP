@@ -12,7 +12,10 @@ import {
   IconStethoscope, IconWeight, IconHeart,
   IconDroplet, IconTruck, IconCalendar, IconPaw,
   IconDeviceFloppy, IconArrowLeft, IconUpload, IconDownload, IconFile,
+  IconQrcode, IconScan,
 } from '@tabler/icons-react'
+import QRGenerator from '../components/QRGenerator.jsx'
+import QRScanner from '../components/QRScanner.jsx'
 import api from '../services/api.js'
 import { formatCOP, formatNumber, ESPECIES, ESTADOS_ANIMAL } from '../config.js'
 
@@ -67,6 +70,8 @@ export default function FichaAnimal() {
   const [editSanidad, setEditSanidad] = useState(null)
   const [editPesaje, setEditPesaje] = useState(null)
   const [editRepro, setEditRepro] = useState(null)
+  const [qrGeneratorOpened, setQrGeneratorOpened] = useState(false)
+  const [qrScannerOpened, setQrScannerOpened] = useState(false)
 
   const [sanidadForm, setSanidadForm] = useState({
     animal_id: '', fecha: new Date().toISOString().split('T')[0],
@@ -365,16 +370,26 @@ export default function FichaAnimal() {
 
   return (
     <Stack gap="md">
-      <Button variant="light" leftSection={<IconArrowLeft size={16} />} onClick={() => navigate('/animales')}>
-        Volver a Animales
-      </Button>
+      <Group justify="space-between">
+        <Button variant="light" leftSection={<IconArrowLeft size={16} />} onClick={() => navigate('/animales')}>
+          Volver a Animales
+        </Button>
+        <Button variant="light" color="green" leftSection={<IconScan size={16} />} onClick={() => setQrScannerOpened(true)}>
+          Escanear
+        </Button>
+      </Group>
 
       {/* Header card */}
       <Paper withBorder p="lg" shadow="sm">
         <Group justify="space-between" wrap="wrap">
           <Group gap="xl" wrap="wrap">
             <div>
-              <Text size="xs" c="dimmed">Código</Text>
+              <Group gap={4}>
+                <Text size="xs" c="dimmed">Código</Text>
+                <ActionIcon variant="subtle" color="green" size="sm" onClick={() => setQrGeneratorOpened(true)}>
+                  <IconQrcode size={16} />
+                </ActionIcon>
+              </Group>
               <Text fw={700} size="lg">{animal.codigo || '-'}</Text>
             </div>
             <div>
@@ -894,6 +909,9 @@ export default function FichaAnimal() {
           <Button onClick={handleReproSubmit}>{editRepro ? 'Actualizar' : 'Guardar'}</Button>
         </Group>
       </Modal>
+
+      <QRGenerator opened={qrGeneratorOpened} onClose={() => setQrGeneratorOpened(false)} animal={animal} />
+      <QRScanner opened={qrScannerOpened} onClose={() => setQrScannerOpened(false)} />
     </Stack>
   )
 }

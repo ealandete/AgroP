@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Grid, Paper, Text, Group, Stack, Title, Skeleton, SimpleGrid,
-  Badge, ActionIcon, Tooltip, Box, Divider, ThemeIcon, ScrollArea,
+  Badge, ActionIcon, Tooltip, Box, Divider, ThemeIcon, ScrollArea, Button,
   useMantineTheme,
 } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
@@ -12,6 +13,7 @@ import {
   IconGripVertical, IconX, IconRefresh, IconVaccine,
   IconDroplet, IconTemperature, IconSeedling, IconPackage,
   IconHeartbeat, IconAlertCircle, IconChecklist,
+  IconRobot, IconArrowRight, IconHistory, IconBell, IconVaccine as IconVaccine2, IconActivity, IconScan,
 } from '@tabler/icons-react'
 import {
   BarChart, BarChart as ReBarChart, PieChart, Pie, Cell,
@@ -22,6 +24,8 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import api from '../services/api'
 import { formatCOP, formatNumber, COLOR_PALETTE } from '../config'
 import { useAuth } from '../store/AuthContext'
+import WeatherWidget from '../components/WeatherWidget.jsx'
+import QRScanner from '../components/QRScanner.jsx'
 
 const ROLES = {
   ADMIN: 'admin',
@@ -686,6 +690,7 @@ function getVisibleWidgets(role, hiddenWidgets) {
 
 export default function Dashboard() {
   const theme = useMantineTheme()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [stats, setStats] = useState(null)
@@ -700,9 +705,69 @@ export default function Dashboard() {
     }
   })
   const [hiddenWidgets, setHiddenWidgets] = useState([])
+  const [qrScannerOpened, setQrScannerOpened] = useState(false)
+
+  const [suggestions, setSuggestions] = useState({ alertas: 0, sinPesaje: 0, vacunas: 0, cosechas: 0 })
+  const [recentActivity, setRecentActivity] = useState([])
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true)
 
   const role = user?.rol || ROLES.ADMIN
   const fincaId = localStorage.getItem('agrop_finca_id')
+
+  useEffect(() => {
+    Promise.allSettled([
+      api.get('/alertas/', { params: { leida: false, limit: 0 } }).catch(() => ({ data: [] })),
+      api.get('/plan-actividades/', { params: { tipo: 'vacunacion', estado: 'programado', limit: 0 } }).catch(() => ({ data: [] })),
+      api.get('/cultivos/', { params: { estado: 'activo', limit: 0 } }).catch(() => ({ data: [] })),
+      api.get('/animales/', { params: { limit: 200 } }).catch(() => ({ data: [] })),
+      api.get('/pesajes/', { params: { limit: 200 } }).catch(() => ({ data: [] })),
+    ]).then(([alertas, vacunas, cosechas, animales, pesajes]) => {
+      const alertasData = Array.isArray(alertas.value?.data) ? alertas.value.data : []
+      const vacunasData = Array.isArray(vacunas.value?.data) ? vacunas.value.data : []
+      const cosechasData = Array.isArray(cosechas.value?.data) ? cosechas.value.data : []
+      const animalesData = Array.isArray(animales.value?.data) ? animales.value.data : []
+      const pesajesData = Array.isArray(pesajes.value?.data) ? pesajes.value.data : []
+
+      const now = new Date()
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+      const animalIdsConPesaje = new Set(pesajesData.filter(p => new Date(p.fecha) > sixtyDaysAgo).map(p => p.animal_id))
+      const sinPesaje = animalesData.filter(a => a.activo && !animalIdsConPesaje.has(a.id)).length
+
+      setSuggestions({
+        alertas: alertasData.length,
+        sinPesaje,
+        vacunas: vacunasData.length,
+        cosechas: cosechasData.length,
+      })
+    }).catch(() => {})
+
+    Promise.allSettled([
+      api.get('/alertas/', { params: { limit: 10, order: '-fecha' } }).catch(() => ({ data: [] })),
+      api.get('/operaciones/', { params: { limit: 10, order: '-fecha' } }).catch(() => ({ data: [] })),
+      api.get('/plan-actividades/', { params: { limit: 10, order: '-fecha_creacion' } }).catch(() => ({ data: [] })),
+    ]).then(([alertas, operaciones, actividades]) => {
+      const items = []
+      const alertasData = Array.isArray(alertas.value?.data) ? alertas.value.data : []
+      const operacionesData = Array.isArray(operaciones.value?.data) ? operaciones.value.data : []
+      const actividadesData = Array.isArray(actividades.value?.data) ? actividades.value.data : []
+
+      alertasData.forEach(a => items.push({
+        id: `a-${a.id}`, type: 'alerta', text: a.mensaje || a.descripcion || 'Alerta',
+        date: a.fecha, icon: IconAlertTriangle, color: 'red',
+      }))
+      operacionesData.forEach(o => items.push({
+        id: `o-${o.id}`, type: 'operacion', text: o.nombre || o.descripcion || 'Operación',
+        date: o.fecha, icon: IconActivity, color: 'blue',
+      }))
+      actividadesData.forEach(ac => items.push({
+        id: `ac-${ac.id}`, type: 'actividad', text: ac.nombre || ac.titulo || 'Actividad',
+        date: ac.fecha_creacion || ac.fecha, icon: IconCalendarEvent, color: 'green',
+      }))
+      items.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+      setRecentActivity(items.slice(0, 10))
+      setSuggestionsLoading(false)
+    }).catch(() => setSuggestionsLoading(false))
+  }, [])
 
   const visibleWidgets = useMemo(() => {
     return widgetOrder.filter((id) => {
@@ -768,6 +833,138 @@ export default function Dashboard() {
           </Tooltip>
         </Group>
       </Group>
+
+      <Paper p="md" radius="md" withBorder>
+        <Group justify="space-between" wrap="wrap">
+          <Group>
+            <ThemeIcon variant="light" size="xl" radius="xl" color="green">
+              <IconPlant size={24} />
+            </ThemeIcon>
+            <Box>
+              <Text size="xl" fw={700}>
+                {user?.nombre ? `Bienvenido, ${user.nombre}` : 'Bienvenido'}
+              </Text>
+              <Text size="sm" c="dimmed">
+                {new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </Text>
+            </Box>
+          </Group>
+          <Group gap="xs">
+            <Button
+              variant="light"
+              color="grape"
+              leftSection={<IconRobot size={16} />}
+              onClick={() => navigate('/inicio-asistente')}
+              size="sm"
+            >
+              Asistente IA
+            </Button>
+            <Button
+              variant="light"
+              color="green"
+              leftSection={<IconScan size={16} />}
+              onClick={() => setQrScannerOpened(true)}
+              size="sm"
+            >
+              Escanear
+            </Button>
+          </Group>
+        </Group>
+      </Paper>
+
+      {!suggestionsLoading && (suggestions.alertas > 0 || suggestions.sinPesaje > 0 || suggestions.vacunas > 0 || suggestions.cosechas > 0) && (
+        <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
+          {suggestions.alertas > 0 && (
+            <Paper p="sm" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate('/alertas')}>
+              <Group gap="xs">
+                <ThemeIcon variant="light" size="lg" radius="xl" color="red">
+                  <IconAlertTriangle size={20} />
+                </ThemeIcon>
+                <Box style={{ flex: 1 }}>
+                  <Text fw={600} size="sm">{suggestions.alertas} alertas sin leer</Text>
+                  <Text size="xs" c="dimmed">Requieren atención</Text>
+                </Box>
+                <IconArrowRight size={16} color="var(--mantine-color-gray-5)" />
+              </Group>
+            </Paper>
+          )}
+          {suggestions.sinPesaje > 0 && (
+            <Paper p="sm" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate('/animales')}>
+              <Group gap="xs">
+                <ThemeIcon variant="light" size="lg" radius="xl" color="orange">
+                  <IconWeight size={20} />
+                </ThemeIcon>
+                <Box style={{ flex: 1 }}>
+                  <Text fw={600} size="sm">{suggestions.sinPesaje} sin pesaje</Text>
+                  <Text size="xs" c="dimmed">+60 días sin registrar</Text>
+                </Box>
+                <IconArrowRight size={16} color="var(--mantine-color-gray-5)" />
+              </Group>
+            </Paper>
+          )}
+          {suggestions.vacunas > 0 && (
+            <Paper p="sm" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate('/planeacion')}>
+              <Group gap="xs">
+                <ThemeIcon variant="light" size="lg" radius="xl" color="blue">
+                  <IconVaccine2 size={20} />
+                </ThemeIcon>
+                <Box style={{ flex: 1 }}>
+                  <Text fw={600} size="sm">{suggestions.vacunas} vacunas próximas</Text>
+                  <Text size="xs" c="dimmed">Programadas pendientes</Text>
+                </Box>
+                <IconArrowRight size={16} color="var(--mantine-color-gray-5)" />
+              </Group>
+            </Paper>
+          )}
+          {suggestions.cosechas > 0 && (
+            <Paper p="sm" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate('/cultivos')}>
+              <Group gap="xs">
+                <ThemeIcon variant="light" size="lg" radius="xl" color="green">
+                  <IconSeedling size={20} />
+                </ThemeIcon>
+                <Box style={{ flex: 1 }}>
+                  <Text fw={600} size="sm">{suggestions.cosechas} cosechas activas</Text>
+                  <Text size="xs" c="dimmed">Cultivos en producción</Text>
+                </Box>
+                <IconArrowRight size={16} color="var(--mantine-color-gray-5)" />
+              </Group>
+            </Paper>
+          )}
+        </SimpleGrid>
+      )}
+
+      <Grid>
+        <Grid.Col span={{ base: 12, md: 8 }}>
+          <WeatherWidget />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, md: 4 }}>
+          {recentActivity.length > 0 && (
+            <Paper p="md" radius="md" withBorder h="100%">
+              <Group mb="sm">
+                <IconHistory size={18} color="var(--mantine-color-gray-6)" />
+                <Text fw={600} size="sm">Actividad Reciente</Text>
+              </Group>
+              <ScrollArea h={240}>
+                <Stack gap={6}>
+                  {recentActivity.map(item => (
+                    <Group key={item.id} gap={6} align="flex-start" wrap="nowrap">
+                      <ThemeIcon variant="light" size="sm" radius="xl" color={item.color}>
+                        <item.icon size={12} />
+                      </ThemeIcon>
+                      <Box style={{ flex: 1, minWidth: 0 }}>
+                        <Text size="xs" lineClamp={1}>{item.text}</Text>
+                        <Text size="10px" c="dimmed">
+                          {item.date ? new Date(item.date).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                        </Text>
+                      </Box>
+                    </Group>
+                  ))}
+                </Stack>
+              </ScrollArea>
+            </Paper>
+          )}
+        </Grid.Col>
+      </Grid>
 
       <SimpleGrid cols={{ base: 2, sm: 3, lg: 5 }} spacing="sm">
         <KPICard
@@ -856,6 +1053,8 @@ export default function Dashboard() {
           <MortalidadChart />
         </Grid.Col>
       </Grid>
+
+      <QRScanner opened={qrScannerOpened} onClose={() => setQrScannerOpened(false)} />
     </Stack>
   )
 }
