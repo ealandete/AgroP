@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   AppShell, Group, Text, NavLink, Burger, Box, Select as MantineSelect,
-  useMantineTheme, Avatar, Menu,
+  useMantineTheme, Avatar, Menu, Badge,
 } from '@mantine/core'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
 import {
@@ -11,7 +11,7 @@ import {
   IconActivity, IconFileDownload, IconEgg, IconBug,
   IconUsers, IconUsersGroup, IconHealthRecognition, IconCalendarEvent, IconClipboardList,
   IconBuildingEstate, IconCheck, IconReportAnalytics, IconFileSpreadsheet,
-  IconSearch, IconAlertTriangle,
+  IconSearch, IconAlertTriangle, IconMail, IconMedicineSyrup, IconTractor,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import api from '../services/api.js'
@@ -26,13 +26,16 @@ const NAV_ITEMS = [
   { label: 'Grupos Manejo', icon: IconUsersGroup, to: '/grupos-manejo', section: 'core' },
   { label: 'Plantillas', icon: IconFileSpreadsheet, to: '/plantillas', section: 'core' },
   { label: 'Planeación', icon: IconCalendarEvent, to: '/planeacion', section: 'core' },
+  { label: 'Equipos/Maquinaria', icon: IconTractor, to: '/equipos', section: 'core' },
   { label: 'Alertas', icon: IconAlertTriangle, to: '/alertas', section: 'core' },
+  { label: 'Farmacia', icon: IconMedicineSyrup, to: '/farmacia', section: 'core' },
   { label: 'Especies', icon: IconPlant, to: '/especies', section: 'especies' },
   { label: 'Consolidado', icon: IconReportAnalytics, to: '/consolidado', section: 'gestion' },
   { label: 'Contabilidad', icon: IconCoin, to: '/contabilidad', section: 'gestion' },
   { label: 'Nómina', icon: IconClipboardList, to: '/nomina', section: 'gestion' },
   { label: 'Inventario', icon: IconPackage, to: '/inventario', section: 'gestion' },
   { label: 'Trabajadores', icon: IconUsers, to: '/trabajadores', section: 'gestion' },
+  { label: 'Mensajería', icon: IconMail, to: '/mensajeria', section: 'gestion' },
   { label: 'SST', icon: IconHealthRecognition, to: '/sst', section: 'gestion' },
   { label: 'Trazabilidad', icon: IconSearch, to: '/trazabilidad', section: 'gestion' },
   { label: 'Estadísticas', icon: IconChartBar, to: '/estadisticas', section: 'analisis' },
@@ -87,7 +90,10 @@ const ROUTE_NAMES = {
   '/trazabilidad': 'Trazabilidad',
   '/ficha-animal': 'Ficha Animal',
   '/cultivos/ficha': 'Ficha Cultivo',
+  '/equipos': 'Equipos/Maquinaria',
   '/alertas': 'Alertas',
+  '/mensajeria': 'Mensajería',
+  '/farmacia': 'Farmacia',
   '/inicio-propietario': 'Panel Propietario',
   '/inicio-capataz': 'Panel Capataz',
   '/inicio-veterinario': 'Panel Veterinario',
@@ -102,6 +108,7 @@ export default function Layout() {
   const location = useLocation()
   const { user, logout, role, activeRole, setActiveRole, isAdmin } = useAuth()
   const [fincas, setFincas] = useState([])
+  const [mensajesNoLeidos, setMensajesNoLeidos] = useState(0)
   const [fincaActiva, setFincaActiva] = useState(() => localStorage.getItem('agrop_finca_id') || '')
   const [fincaDetails, setFincaDetails] = useState(null)
   const isMobile = useMediaQuery('(max-width: 768px)')
@@ -127,6 +134,17 @@ export default function Layout() {
         .catch(() => setFincaDetails(null))
     }
   }, [fincaActiva])
+
+  useEffect(() => {
+    const fetchNoLeidos = () => {
+      api.get('/mensajes/no-leidos').then(r => {
+        setMensajesNoLeidos(r.data?.total || 0)
+      }).catch(() => {})
+    }
+    fetchNoLeidos()
+    const interval = setInterval(fetchNoLeidos, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   const cambiarFinca = (id) => {
     setFincaActiva(id)
@@ -276,11 +294,15 @@ export default function Layout() {
                 </Text>
               )
             }
+            const isMensajeria = item.to === '/mensajeria'
             items.push(
               <NavLink
                 key={item.to}
                 label={item.label}
                 leftSection={<item.icon size={20} stroke={1.5} />}
+                rightSection={isMensajeria && mensajesNoLeidos > 0 ? (
+                  <Badge size="xs" color="red" variant="filled" circle>{mensajesNoLeidos}</Badge>
+                ) : null}
                 active={location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))}
                 onClick={() => { navigate(item.to); toggle() }}
                 variant="filled"

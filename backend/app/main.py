@@ -20,6 +20,9 @@ from app.routers.alertas import router as alertas_router
 from app.routers.templates import router as templates_router
 from app.routers.vigilancia import router as vigilancia_router
 from app.routers.trazabilidad import router as trazabilidad_router
+from app.routers.mensajeria import router as mensajeria_router
+from app.routers.farmacia import router as farmacia_router
+from app.routers.equipos import router as equipos_router
 
 tags_metadata = [
     {"name": "Autenticacion", "description": "Login, registro, tokens"},
@@ -31,6 +34,8 @@ tags_metadata = [
     {"name": "Alertas", "description": "Notificaciones y webhooks"},
     {"name": "Exportar", "description": "PDF, Excel, CSV"},
     {"name": "Sistema", "description": "Usuarios, roles, diagnostico"},
+    {"name": "Mensajeria", "description": "Mensajeria interna entre usuarios"},
+    {"name": "Farmacia", "description": "Gestion de farmacia veterinaria"},
 ]
 
 app = FastAPI(
@@ -69,6 +74,8 @@ curl -H "Authorization: Bearer <token>" /api/animales/
 - **Trazabilidad** - Trazabilidad completa de animales, cultivos y productos
 - **Exportar** - Exportacion a PDF, Excel, CSV
 - **Sistema** - Usuarios, roles, configuracion, diagnostico
+- **Mensajeria** - Mensajeria interna entre usuarios del sistema
+- **Farmacia** - Gestion de farmacia veterinaria, inventario y aplicaciones
 
 ## Rate Limiting
 
@@ -126,6 +133,8 @@ app.include_router(alertas_router)
 app.include_router(templates_router)
 app.include_router(vigilancia_router)
 app.include_router(trazabilidad_router)
+app.include_router(mensajeria_router)
+app.include_router(farmacia_router)
 
 
 @app.get("/api/health")

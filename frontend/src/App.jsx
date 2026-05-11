@@ -32,6 +32,9 @@ import AdminSistema from './pages/AdminSistema.jsx'
 import Alertas from './pages/Alertas.jsx'
 import Plantillas from './pages/Plantillas.jsx'
 import Trazabilidad from './pages/Trazabilidad.jsx'
+import Equipos from './pages/Equipos.jsx'
+import Mensajeria from './pages/Mensajeria.jsx'
+import Farmacia from './pages/Farmacia.jsx'
 import InicioPropietario from './pages/InicioPropietario.jsx'
 import InicioCapataz from './pages/InicioCapataz.jsx'
 import InicioVeterinario from './pages/InicioVeterinario.jsx'
@@ -96,6 +99,9 @@ export default function App() {
           <Route path="plantillas" element={<Plantillas />} />
           <Route path="alertas" element={<Alertas />} />
           <Route path="trazabilidad" element={<Trazabilidad />} />
+          <Route path="equipos" element={<Equipos />} />
+          <Route path="mensajeria" element={<Mensajeria />} />
+          <Route path="farmacia" element={<Farmacia />} />
           <Route path="inicio-propietario" element={<InicioPropietario />} />
           <Route path="inicio-capataz" element={<InicioCapataz />} />
           <Route path="inicio-veterinario" element={<InicioVeterinario />} />

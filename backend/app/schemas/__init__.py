@@ -792,3 +792,207 @@ class WhatsAppConfig(BaseModel):
     api_url: str = ""
     api_key: str = ""
     phone_number: str = ""
+
+
+# --- Mensajeria Interna ---
+
+class MensajeCreate(BaseModel):
+    para_id: int
+    asunto: str
+    cuerpo: str
+    prioridad: str = "media"
+
+class MensajeOut(BaseModel):
+    id: int
+    de_id: int
+    para_id: int
+    asunto: str
+    cuerpo: str
+    leido: bool
+    prioridad: str
+    created_at: Optional[datetime]
+    de_nombre: Optional[str] = None
+    para_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class MensajeNoLeidos(BaseModel):
+    total: int
+
+
+# --- Farmacia Veterinaria ---
+
+class MedicamentoBase(BaseModel):
+    nombre: str
+    principio_activo: Optional[str] = None
+    categoria: str
+    presentacion: Optional[str] = None
+    concentracion: Optional[str] = None
+    via_admin: str = "oral"
+    dosis_referencia: Optional[str] = None
+    intervalo_retiro: Optional[int] = None
+    fabricante: Optional[str] = None
+    requiere_receta: bool = False
+
+class MedicamentoCreate(MedicamentoBase):
+    pass
+
+class MedicamentoUpdate(BaseModel):
+    nombre: Optional[str] = None
+    principio_activo: Optional[str] = None
+    categoria: Optional[str] = None
+    presentacion: Optional[str] = None
+    concentracion: Optional[str] = None
+    via_admin: Optional[str] = None
+    dosis_referencia: Optional[str] = None
+    intervalo_retiro: Optional[int] = None
+    fabricante: Optional[str] = None
+    requiere_receta: Optional[bool] = None
+    activo: Optional[bool] = None
+
+class MedicamentoOut(MedicamentoBase):
+    id: int
+    activo: bool
+    created_at: Optional[datetime]
+    stock_actual: float = 0
+
+    class Config:
+        from_attributes = True
+
+class InventarioFarmaciaCreate(BaseModel):
+    medicina_id: int
+    lote: str
+    cantidad: float
+    fecha_vencimiento: date
+
+class InventarioFarmaciaOut(BaseModel):
+    id: int
+    medicina_id: int
+    lote: str
+    cantidad: float
+    fecha_vencimiento: date
+    created_at: Optional[datetime]
+    medicina_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class AplicacionMedicamentoCreate(BaseModel):
+    animal_id: int
+    medicina_id: int
+    fecha: date
+    dosis: Optional[str] = None
+    responsable: Optional[str] = None
+
+class AplicacionMedicamentoOut(BaseModel):
+    id: int
+    animal_id: int
+    medicina_id: int
+    fecha: date
+    dosis: Optional[str] = None
+    responsable: Optional[str] = None
+    created_at: Optional[datetime]
+    animal_codigo: Optional[str] = None
+    medicina_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ─── Equipos / Maquinaria ─────────────────────────────────────
+
+class EquipoBase(BaseModel):
+    finca_id: int
+    nombre: str
+    marca: Optional[str] = None
+    modelo: Optional[str] = None
+    año: Optional[int] = None
+    categoria: str = "otro"
+    numero_serie: Optional[str] = None
+    placa: Optional[str] = None
+    potencia_hp: Optional[float] = None
+    capacidad: Optional[str] = None
+    estado: str = "operativo"
+    fecha_compra: Optional[date] = None
+    valor_compra: Optional[float] = None
+    vida_util_anos: Optional[int] = 10
+    valor_residual: Optional[float] = None
+    proximo_mantenimiento_km: Optional[float] = None
+    proximo_mantenimiento_horas: Optional[float] = None
+
+class EquipoCreate(EquipoBase):
+    pass
+
+class EquipoUpdate(BaseModel):
+    finca_id: Optional[int] = None
+    nombre: Optional[str] = None
+    marca: Optional[str] = None
+    modelo: Optional[str] = None
+    año: Optional[int] = None
+    categoria: Optional[str] = None
+    numero_serie: Optional[str] = None
+    placa: Optional[str] = None
+    potencia_hp: Optional[float] = None
+    capacidad: Optional[str] = None
+    estado: Optional[str] = None
+    fecha_compra: Optional[date] = None
+    valor_compra: Optional[float] = None
+    vida_util_anos: Optional[int] = None
+    valor_residual: Optional[float] = None
+    proximo_mantenimiento_km: Optional[float] = None
+    proximo_mantenimiento_horas: Optional[float] = None
+
+class EquipoOut(EquipoBase):
+    id: int
+    activo: bool
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class MantenimientoBase(BaseModel):
+    equipo_id: int
+    fecha: date
+    tipo: str = "preventivo"
+    descripcion: Optional[str] = None
+    costo: Optional[float] = None
+    proveedor: Optional[str] = None
+    proximo_mantenimiento_fecha: Optional[date] = None
+    kilometraje: Optional[float] = None
+    horas_operacion: Optional[float] = None
+
+class MantenimientoCreate(MantenimientoBase):
+    pass
+
+class MantenimientoUpdate(BaseModel):
+    fecha: Optional[date] = None
+    tipo: Optional[str] = None
+    descripcion: Optional[str] = None
+    costo: Optional[float] = None
+    proveedor: Optional[str] = None
+    proximo_mantenimiento_fecha: Optional[date] = None
+    kilometraje: Optional[float] = None
+    horas_operacion: Optional[float] = None
+
+class MantenimientoOut(MantenimientoBase):
+    id: int
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class AlertaMantenimientoOut(BaseModel):
+    equipo_id: int
+    equipo_nombre: str
+    equipo_marca: Optional[str] = None
+    equipo_modelo: Optional[str] = None
+    categoria: str
+    proximo_mantenimiento_km: Optional[float] = None
+    proximo_mantenimiento_horas: Optional[float] = None
+    ultimo_mantenimiento_fecha: Optional[date] = None
+    dias_restantes: Optional[int] = None

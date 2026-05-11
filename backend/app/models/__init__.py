@@ -1080,6 +1080,73 @@ class Morbilidad(Base):
     siembra = relationship("Siembra")
 
 
+# ============================================================
+# MODELOS MENSAJERIA INTERNA
+# ============================================================
+
+class Mensaje(Base):
+    __tablename__ = "mensajes"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    de_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    para_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    asunto = Column(String(200), nullable=False)
+    cuerpo = Column(Text, nullable=False)
+    leido = Column(Boolean, default=False)
+    prioridad = Column(Enum("baja", "media", "alta"), default="media")
+    created_at = Column(DateTime, server_default=func.now())
+
+    de = relationship("Usuario", foreign_keys=[de_id])
+    para = relationship("Usuario", foreign_keys=[para_id])
+
+
+# ============================================================
+# MODELOS FARMACIA VETERINARIA
+# ============================================================
+
+class Medicamento(Base):
+    __tablename__ = "medicamentos"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String(200), nullable=False)
+    principio_activo = Column(String(200))
+    categoria = Column(Enum("vacuna", "antibiotico", "antiparasitario", "antiinflamatorio", "vitamina", "suplemento", "desinfectante", "otro"), nullable=False)
+    presentacion = Column(String(100))
+    concentracion = Column(String(100))
+    via_admin = Column(Enum("oral", "inyectable", "topica", "intramuscular", "subcutanea", "intravenosa"), default="oral")
+    dosis_referencia = Column(String(100))
+    intervalo_retiro = Column(Integer, comment="Dias de retiro")
+    fabricante = Column(String(200))
+    requiere_receta = Column(Boolean, default=False)
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class InventarioFarmacia(Base):
+    __tablename__ = "inventario_farmacia"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    medicina_id = Column(Integer, ForeignKey("medicamentos.id"), nullable=False)
+    lote = Column(String(100), nullable=False)
+    cantidad = Column(DECIMAL(12, 3), nullable=False)
+    fecha_vencimiento = Column(Date, nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    medicina = relationship("Medicamento")
+
+
+class AplicacionMedicamento(Base):
+    __tablename__ = "aplicaciones_medicamentos"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    animal_id = Column(Integer, ForeignKey("animales.id"), nullable=False)
+    medicina_id = Column(Integer, ForeignKey("medicamentos.id"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    dosis = Column(String(100))
+    responsable = Column(String(150))
+    created_at = Column(DateTime, server_default=func.now())
+
+    animal = relationship("Animal")
+    medicina = relationship("Medicamento")
+
+
 class TransferenciaInsumo(Base):
     __tablename__ = "transferencias_insumos"
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -1111,3 +1178,48 @@ class RegistroClimatico(Base):
     horas_sol = Column(DECIMAL(4, 1))
     estacion = Column(String(30))
     created_at = Column(DateTime, server_default=func.now())
+
+
+class Equipo(Base):
+    __tablename__ = "equipos"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    nombre = Column(String(200), nullable=False)
+    marca = Column(String(100))
+    modelo = Column(String(100))
+    año = Column(Integer)
+    categoria = Column(Enum("tractor", "cosechadora", "sembradora", "riego", "vehiculo", "herramienta", "ordenha", "galpon", "silo", "otro"), nullable=False)
+    numero_serie = Column(String(100))
+    placa = Column(String(50))
+    potencia_hp = Column(DECIMAL(8, 2))
+    capacidad = Column(String(100))
+    estado = Column(Enum("operativo", "mantenimiento", "averiado", "baja"), default="operativo")
+    fecha_compra = Column(Date)
+    valor_compra = Column(DECIMAL(12, 2))
+    vida_util_anos = Column(Integer, default=10)
+    valor_residual = Column(DECIMAL(12, 2))
+    proximo_mantenimiento_km = Column(DECIMAL(10, 2))
+    proximo_mantenimiento_horas = Column(DECIMAL(10, 2))
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    finca = relationship("Finca")
+
+
+class Mantenimiento(Base):
+    __tablename__ = "mantenimientos_equipos"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    equipo_id = Column(Integer, ForeignKey("equipos.id", ondelete="CASCADE"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    tipo = Column(Enum("preventivo", "correctivo", "revision"), nullable=False)
+    descripcion = Column(Text)
+    costo = Column(DECIMAL(12, 2))
+    proveedor = Column(String(200))
+    proximo_mantenimiento_fecha = Column(Date)
+    kilometraje = Column(DECIMAL(10, 2))
+    horas_operacion = Column(DECIMAL(10, 2))
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    equipo = relationship("Equipo")
