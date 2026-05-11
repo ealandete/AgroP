@@ -36,6 +36,10 @@ import Trazabilidad from './pages/Trazabilidad.jsx'
 import Equipos from './pages/Equipos.jsx'
 import Mensajeria from './pages/Mensajeria.jsx'
 import Farmacia from './pages/Farmacia.jsx'
+import Agua from './pages/Agua.jsx'
+import Alimentacion from './pages/Alimentacion.jsx'
+import Bioseguridad from './pages/Bioseguridad.jsx'
+import Certificaciones from './pages/Certificaciones.jsx'
 import InicioPropietario from './pages/InicioPropietario.jsx'
 import InicioCapataz from './pages/InicioCapataz.jsx'
 import InicioVeterinario from './pages/InicioVeterinario.jsx'
@@ -103,6 +107,10 @@ export default function App() {
           <Route path="equipos" element={<Equipos />} />
           <Route path="mensajeria" element={<Mensajeria />} />
           <Route path="farmacia" element={<Farmacia />} />
+          <Route path="agua" element={<Agua />} />
+          <Route path="alimentacion" element={<Alimentacion />} />
+          <Route path="bioseguridad" element={<Bioseguridad />} />
+          <Route path="certificaciones" element={<Certificaciones />} />
           <Route path="inicio-propietario" element={<InicioPropietario />} />
           <Route path="inicio-capataz" element={<InicioCapataz />} />
           <Route path="inicio-veterinario" element={<InicioVeterinario />} />

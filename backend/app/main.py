@@ -23,6 +23,10 @@ from app.routers.trazabilidad import router as trazabilidad_router
 from app.routers.mensajeria import router as mensajeria_router
 from app.routers.farmacia import router as farmacia_router
 from app.routers.equipos import router as equipos_router
+from app.routers.agua import router as agua_router
+from app.routers.alimentacion import router as alimentacion_router
+from app.routers.bioseguridad import router as bioseguridad_router
+from app.routers.certificaciones import router as certificaciones_router
 
 tags_metadata = [
     {"name": "Autenticacion", "description": "Login, registro, tokens"},
@@ -36,6 +40,10 @@ tags_metadata = [
     {"name": "Sistema", "description": "Usuarios, roles, diagnostico"},
     {"name": "Mensajeria", "description": "Mensajeria interna entre usuarios"},
     {"name": "Farmacia", "description": "Gestion de farmacia veterinaria"},
+    {"name": "Bioseguridad", "description": "Control de visitas, desinfeccion y vehiculos"},
+    {"name": "Certificaciones", "description": "Gestion de certificaciones y no conformidades"},
+    {"name": "Agua / Riego", "description": "Fuentes de agua, consumo y calidad"},
+    {"name": "Alimentacion", "description": "Alimentos, dietas y consumo diario"},
 ]
 
 app = FastAPI(
@@ -76,6 +84,8 @@ curl -H "Authorization: Bearer <token>" /api/animales/
 - **Sistema** - Usuarios, roles, configuracion, diagnostico
 - **Mensajeria** - Mensajeria interna entre usuarios del sistema
 - **Farmacia** - Gestion de farmacia veterinaria, inventario y aplicaciones
+- **Agua / Riego** - Fuentes de agua, consumo y calidad del agua
+- **Alimentacion** - Alimentos, dietas y consumo diario
 
 ## Rate Limiting
 
@@ -135,6 +145,10 @@ app.include_router(vigilancia_router)
 app.include_router(trazabilidad_router)
 app.include_router(mensajeria_router)
 app.include_router(farmacia_router)
+app.include_router(bioseguridad_router)
+app.include_router(certificaciones_router)
+app.include_router(agua_router)
+app.include_router(alimentacion_router)
 
 
 @app.get("/api/health")

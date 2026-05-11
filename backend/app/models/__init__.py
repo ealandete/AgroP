@@ -1223,3 +1223,204 @@ class Mantenimiento(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     equipo = relationship("Equipo")
+
+
+# ============================================================
+# MODELOS AGUA / RIEGO
+# ============================================================
+
+class FuenteAgua(Base):
+    __tablename__ = "fuentes_agua"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    nombre = Column(String(150), nullable=False)
+    tipo = Column(Enum("rio", "pozo", "nacimiento", "embalse", "acueducto", "otro"), nullable=False)
+    caudal_lps = Column(DECIMAL(10, 2))
+    coordenadas = Column(JSON)
+    profundidad_m = Column(DECIMAL(8, 2))
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    finca = relationship("Finca")
+
+
+class ConsumoAgua(Base):
+    __tablename__ = "consumo_agua"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    fuente_id = Column(Integer, ForeignKey("fuentes_agua.id"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    cantidad_m3 = Column(DECIMAL(12, 2), nullable=False)
+    tipo_uso = Column(Enum("riego", "animal", "domestico", "limpieza", "otro"), nullable=False)
+    lote_id = Column(Integer, ForeignKey("lotes.id"), nullable=True)
+    observaciones = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    fuente = relationship("FuenteAgua")
+    lote = relationship("Lote")
+
+
+class CalidadAgua(Base):
+    __tablename__ = "calidad_agua"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    fuente_id = Column(Integer, ForeignKey("fuentes_agua.id"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    ph = Column(DECIMAL(4, 2))
+    turbiedad_ntu = Column(DECIMAL(8, 2))
+    coliformes = Column(Integer)
+    conductividad = Column(DECIMAL(10, 2))
+    observaciones = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    fuente = relationship("FuenteAgua")
+
+
+# ============================================================
+# MODELOS ALIMENTACION
+# ============================================================
+
+class Alimento(Base):
+    __tablename__ = "alimentos"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String(150), nullable=False)
+    categoria = Column(Enum("concentrado", "forraje", "suplemento", "vitamina", "mineral", "otro"), nullable=False)
+    unidad_medida = Column(String(30), nullable=False)
+    costo_unitario = Column(DECIMAL(12, 2))
+    composicion_nutricional = Column(JSON)
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class Dieta(Base):
+    __tablename__ = "dietas"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String(150), nullable=False)
+    tipo = Column(Enum("engorde", "leche", "cria", "mantenimiento", "gestacion"), nullable=False)
+    especie = Column(String(50))
+    observaciones = Column(Text)
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class DietaComponente(Base):
+    __tablename__ = "dieta_componentes"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    dieta_id = Column(Integer, ForeignKey("dietas.id", ondelete="CASCADE"), nullable=False)
+    alimento_id = Column(Integer, ForeignKey("alimentos.id"), nullable=False)
+    porcentaje = Column(DECIMAL(5, 2))
+    cantidad_kg = Column(DECIMAL(10, 2))
+    costo = Column(DECIMAL(12, 2))
+    created_at = Column(DateTime, server_default=func.now())
+
+    dieta = relationship("Dieta")
+    alimento = relationship("Alimento")
+
+
+class ConsumoDiario(Base):
+    __tablename__ = "consumo_diario"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    fecha = Column(Date, nullable=False)
+    lote_id = Column(Integer, ForeignKey("lotes.id"), nullable=True)
+    animal_id = Column(Integer, ForeignKey("animales.id"), nullable=True)
+    alimento_id = Column(Integer, ForeignKey("alimentos.id"), nullable=False)
+    cantidad_kg = Column(DECIMAL(10, 2), nullable=False)
+    costo = Column(DECIMAL(12, 2))
+    created_at = Column(DateTime, server_default=func.now())
+
+    alimento = relationship("Alimento")
+    lote = relationship("Lote")
+    animal = relationship("Animal")
+
+
+# ============================================================
+# MODELOS BIOSEGURIDAD
+# ============================================================
+
+class VisitaBioseguridad(Base):
+    __tablename__ = "visitas_bioseguridad"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    nombre = Column(String(150), nullable=False)
+    identificacion = Column(String(30))
+    empresa = Column(String(200))
+    motivo = Column(Enum("visita", "tecnico", "veterinario", "proveedor", "transporte", "autoridad", "otro"), nullable=False)
+    fecha_ingreso = Column(DateTime, nullable=False)
+    fecha_salida = Column(DateTime)
+    firma = Column(Text)
+    observaciones = Column(Text)
+    areas_visitadas = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    finca = relationship("Finca")
+
+
+class Desinfeccion(Base):
+    __tablename__ = "desinfecciones"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    area = Column(Enum("ingreso", "galpon", "establo", "bodega", "vehiculo", "equipo", "otro"), nullable=False)
+    tipo = Column(Enum("cal", "bactericida", "virucida", "otro"), nullable=False)
+    producto = Column(String(200))
+    concentracion = Column(String(100))
+    responsable = Column(String(150))
+    observaciones = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    finca = relationship("Finca")
+
+
+class IngresoVehiculo(Base):
+    __tablename__ = "ingresos_vehiculos"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    placa = Column(String(20), nullable=False)
+    conductor = Column(String(150))
+    empresa = Column(String(200))
+    fecha = Column(Date, nullable=False)
+    tipo = Column(Enum("propio", "proveedor", "transporte", "visita"), nullable=False)
+    desinfeccion_si_no = Column(Boolean, default=False)
+    observaciones = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    finca = relationship("Finca")
+
+
+# ============================================================
+# MODELOS CERTIFICACIONES
+# ============================================================
+
+class Certificacion(Base):
+    __tablename__ = "certificaciones"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    nombre = Column(String(200), nullable=False)
+    tipo = Column(Enum("BPA", "BPG", "organico", "GlobalGAP", "comercio_justo", "ICA", "otro"), nullable=False)
+    entidad_certificadora = Column(String(200))
+    fecha_emision = Column(Date, nullable=False)
+    fecha_vencimiento = Column(Date)
+    alcance = Column(Enum("produccion", "procesamiento", "comercializacion", "toda_finca"), nullable=False)
+    estado = Column(Enum("activa", "vencida", "en_proceso", "suspendida"), default="activa")
+    observaciones = Column(Text)
+    archivo_url = Column(String(500))
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    finca = relationship("Finca")
+
+
+class NoConformidad(Base):
+    __tablename__ = "no_conformidades"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    certificacion_id = Column(Integer, ForeignKey("certificaciones.id", ondelete="CASCADE"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    descripcion = Column(Text, nullable=False)
+    tipo = Column(Enum("critica", "mayor", "menor"), nullable=False)
+    estado = Column(Enum("abierta", "en_correccion", "cerrada"), default="abierta")
+    fecha_cierre = Column(Date)
+    acciones_correctivas = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    certificacion = relationship("Certificacion")

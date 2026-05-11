@@ -996,3 +996,343 @@ class AlertaMantenimientoOut(BaseModel):
     proximo_mantenimiento_horas: Optional[float] = None
     ultimo_mantenimiento_fecha: Optional[date] = None
     dias_restantes: Optional[int] = None
+
+
+# ─── Agua / Riego ─────────────────────────────────────────────
+
+class FuenteAguaBase(BaseModel):
+    finca_id: int
+    nombre: str
+    tipo: str = "rio"
+    caudal_lps: Optional[float] = None
+    coordenadas: Optional[Any] = None
+    profundidad_m: Optional[float] = None
+    activo: bool = True
+
+class FuenteAguaCreate(FuenteAguaBase):
+    pass
+
+class FuenteAguaUpdate(BaseModel):
+    nombre: Optional[str] = None
+    tipo: Optional[str] = None
+    caudal_lps: Optional[float] = None
+    coordenadas: Optional[Any] = None
+    profundidad_m: Optional[float] = None
+    activo: Optional[bool] = None
+
+class FuenteAguaOut(FuenteAguaBase):
+    id: int
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class ConsumoAguaBase(BaseModel):
+    fuente_id: int
+    fecha: date
+    cantidad_m3: float
+    tipo_uso: str = "riego"
+    lote_id: Optional[int] = None
+    observaciones: Optional[str] = None
+
+class ConsumoAguaCreate(ConsumoAguaBase):
+    pass
+
+class ConsumoAguaOut(ConsumoAguaBase):
+    id: int
+    created_at: Optional[datetime]
+    fuente_nombre: Optional[str] = None
+    lote_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class CalidadAguaBase(BaseModel):
+    fuente_id: int
+    fecha: date
+    ph: Optional[float] = None
+    turbiedad_ntu: Optional[float] = None
+    coliformes: Optional[int] = None
+    conductividad: Optional[float] = None
+    observaciones: Optional[str] = None
+
+class CalidadAguaCreate(CalidadAguaBase):
+    pass
+
+class CalidadAguaOut(CalidadAguaBase):
+    id: int
+    created_at: Optional[datetime]
+    fuente_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ResumenAgua(BaseModel):
+    total_fuentes: int
+    fuentes_activas: int
+    consumo_mes: float
+    calidad_ultimo_test: Optional[dict] = None
+    alertas: int = 0
+
+
+# ─── Alimentacion ────────────────────────────────────────────
+
+class AlimentoBase(BaseModel):
+    nombre: str
+    categoria: str
+    unidad_medida: str
+    costo_unitario: Optional[float] = None
+    composicion_nutricional: Optional[Any] = None
+
+class AlimentoCreate(AlimentoBase):
+    pass
+
+class AlimentoUpdate(BaseModel):
+    nombre: Optional[str] = None
+    categoria: Optional[str] = None
+    unidad_medida: Optional[str] = None
+    costo_unitario: Optional[float] = None
+    composicion_nutricional: Optional[Any] = None
+    activo: Optional[bool] = None
+
+class AlimentoOut(AlimentoBase):
+    id: int
+    activo: bool
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class DietaBase(BaseModel):
+    nombre: str
+    tipo: str
+    especie: Optional[str] = None
+    observaciones: Optional[str] = None
+
+class DietaCreate(DietaBase):
+    pass
+
+class DietaOut(DietaBase):
+    id: int
+    activo: bool
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+    componentes: list = []
+
+    class Config:
+        from_attributes = True
+
+
+class DietaComponenteBase(BaseModel):
+    alimento_id: int
+    porcentaje: Optional[float] = None
+    cantidad_kg: Optional[float] = None
+    costo: Optional[float] = None
+
+class DietaComponenteCreate(DietaComponenteBase):
+    pass
+
+class DietaComponenteOut(DietaComponenteBase):
+    id: int
+    dieta_id: int
+    created_at: Optional[datetime]
+    alimento_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ConsumoDiarioBase(BaseModel):
+    fecha: date
+    lote_id: Optional[int] = None
+    animal_id: Optional[int] = None
+    alimento_id: int
+    cantidad_kg: float
+    costo: Optional[float] = None
+
+class ConsumoDiarioCreate(ConsumoDiarioBase):
+    pass
+
+class ConsumoDiarioOut(ConsumoDiarioBase):
+    id: int
+    created_at: Optional[datetime]
+    alimento_nombre: Optional[str] = None
+    lote_nombre: Optional[str] = None
+    animal_codigo: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+# ─── Bioseguridad ────────────────────────────────────────────
+
+class VisitaCreate(BaseModel):
+    finca_id: int
+    nombre: str
+    identificacion: Optional[str] = None
+    empresa: Optional[str] = None
+    motivo: str = "visita"
+    fecha_ingreso: datetime
+    fecha_salida: Optional[datetime] = None
+    firma: Optional[str] = None
+    observaciones: Optional[str] = None
+    areas_visitadas: Optional[str] = None
+
+class VisitaUpdateSalida(BaseModel):
+    fecha_salida: datetime
+    observaciones: Optional[str] = None
+
+class VisitaOut(BaseModel):
+    id: int
+    finca_id: int
+    nombre: str
+    identificacion: Optional[str]
+    empresa: Optional[str]
+    motivo: str
+    fecha_ingreso: Optional[datetime]
+    fecha_salida: Optional[datetime]
+    firma: Optional[str]
+    observaciones: Optional[str]
+    areas_visitadas: Optional[str]
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class DesinfeccionCreate(BaseModel):
+    finca_id: int
+    fecha: date
+    area: str = "ingreso"
+    tipo: str = "cal"
+    producto: Optional[str] = None
+    concentracion: Optional[str] = None
+    responsable: Optional[str] = None
+    observaciones: Optional[str] = None
+
+class DesinfeccionOut(BaseModel):
+    id: int
+    finca_id: int
+    fecha: Optional[date]
+    area: str
+    tipo: str
+    producto: Optional[str]
+    concentracion: Optional[str]
+    responsable: Optional[str]
+    observaciones: Optional[str]
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class VehiculoCreate(BaseModel):
+    finca_id: int
+    placa: str
+    conductor: Optional[str] = None
+    empresa: Optional[str] = None
+    fecha: date
+    tipo: str = "visita"
+    desinfeccion_si_no: bool = False
+    observaciones: Optional[str] = None
+
+class VehiculoOut(BaseModel):
+    id: int
+    finca_id: int
+    placa: str
+    conductor: Optional[str]
+    empresa: Optional[str]
+    fecha: Optional[date]
+    tipo: str
+    desinfeccion_si_no: bool
+    observaciones: Optional[str]
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class ResumenBioseguridad(BaseModel):
+    visitas_mes: int = 0
+    desinfecciones_mes: int = 0
+    vehiculos_mes: int = 0
+    alertas_bioseguridad: int = 0
+
+
+# ─── Certificaciones ─────────────────────────────────────────
+
+class CertificacionCreate(BaseModel):
+    finca_id: int
+    nombre: str
+    tipo: str = "BPA"
+    entidad_certificadora: Optional[str] = None
+    fecha_emision: date
+    fecha_vencimiento: Optional[date] = None
+    alcance: str = "produccion"
+    estado: str = "activa"
+    observaciones: Optional[str] = None
+    archivo_url: Optional[str] = None
+
+class CertificacionUpdate(BaseModel):
+    nombre: Optional[str] = None
+    tipo: Optional[str] = None
+    entidad_certificadora: Optional[str] = None
+    fecha_emision: Optional[date] = None
+    fecha_vencimiento: Optional[date] = None
+    alcance: Optional[str] = None
+    estado: Optional[str] = None
+    observaciones: Optional[str] = None
+    archivo_url: Optional[str] = None
+
+class CertificacionOut(BaseModel):
+    id: int
+    finca_id: int
+    nombre: str
+    tipo: str
+    entidad_certificadora: Optional[str]
+    fecha_emision: Optional[date]
+    fecha_vencimiento: Optional[date]
+    alcance: str
+    estado: str
+    observaciones: Optional[str]
+    archivo_url: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class NoConformidadCreate(BaseModel):
+    certificacion_id: int
+    fecha: date
+    descripcion: str
+    tipo: str = "menor"
+    estado: str = "abierta"
+    fecha_cierre: Optional[date] = None
+    acciones_correctivas: Optional[str] = None
+
+class NoConformidadOut(BaseModel):
+    id: int
+    certificacion_id: int
+    fecha: Optional[date]
+    descripcion: str
+    tipo: str
+    estado: str
+    fecha_cierre: Optional[date]
+    acciones_correctivas: Optional[str]
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class AlertaCertificacionOut(BaseModel):
+    id: int
+    nombre: str
+    tipo: str
+    entidad_certificadora: Optional[str]
+    fecha_vencimiento: Optional[date]
+    dias_restantes: int
+    severidad: str
