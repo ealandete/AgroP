@@ -1,0 +1,17 @@
+[Unit]
+Description=AgroP Backend API
+After=network.target mariadb.service
+
+[Service]
+Type=simple
+User=emilio
+Group=emilio
+WorkingDirectory=/home/emilio/Proyectos/AgroP/backend
+Environment=PYTHONPATH=/home/emilio/Proyectos/AgroP/backend
+Environment=PATH=/home/emilio/Proyectos/AgroP/backend/.venv/bin:/usr/bin
+ExecStart=/home/emilio/Proyectos/AgroP/backend/.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
