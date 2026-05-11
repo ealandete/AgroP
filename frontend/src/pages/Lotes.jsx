@@ -11,7 +11,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import {
   IconPlus, IconEdit, IconSearch,
-  IconEye, IconCheck, IconX, IconEditCircle,
+  IconEye, IconCheck, IconX, IconEditCircle, IconInfoCircle,
 } from '@tabler/icons-react'
 import { MapContainer, TileLayer, Polygon, Popup, useMap, CircleMarker } from 'react-leaflet'
 import api from '../services/api.js'
@@ -141,6 +141,10 @@ function DrawControl({ lotes, editingPolygonId, onPolygonDrawn, startDrawing }) 
         })
         drawnItems.addLayer(polygon)
         map.fitBounds(polygon.getBounds(), { padding: [50, 50] })
+        // Enable edit mode on the polygon so vertices are draggable
+        setTimeout(() => {
+          polygon.editing?.enable()
+        }, 300)
       }
     }
   }, [editingPolygonId, lotes, map])
@@ -158,8 +162,39 @@ function DrawControl({ lotes, editingPolygonId, onPolygonDrawn, startDrawing }) 
 }
 
 function MapaLotes({ lotes, finca, selectedId, onSelect, editingPolygonId, onPolygonDrawn, startDrawing }) {
+  const [showHelp, setShowHelp] = useState(true)
   return (
     <Paper withBorder style={{ height: 500, overflow: 'hidden', position: 'relative' }}>
+      {showHelp && (
+        <Paper
+          shadow="md"
+          p="xs"
+          withBorder
+          style={{
+            position: 'absolute', top: 10, left: 10, zIndex: 1000,
+            maxWidth: 280, fontSize: 11, backgroundColor: 'rgba(255,255,255,0.95)',
+          }}
+        >
+          <Group justify="space-between" mb={2}>
+            <Text fw={600} size="xs">
+              <IconInfoCircle size={12} style={{ marginRight: 4 }} />
+              Edición de mapa
+            </Text>
+            <ActionIcon size="xs" variant="subtle" onClick={() => setShowHelp(false)}>
+              <IconX size={12} />
+            </ActionIcon>
+          </Group>
+          <Text size={10} c="dimmed" component="div">
+            🖱️ <b>Click</b> sobre lote → seleccionar<br />
+            🖱️ <b>Arrastrar</b> mapa → mover vista<br />
+            🔍 <b>Scroll</b> → zoom<br />
+            ✏️ <b>Dibujar polígono</b> → click "Dibujar polígono", luego click en mapa para crear vértices<br />
+            🔵 <b>Editar vértices</b> → click "Editar polígono", luego arrastrar puntos azules<br />
+            ❌ <b>Eliminar vértice</b> → Shift+click en un vértice<br />
+            ✅ <b>Cerrar polígono</b> → click en el primer vértice
+          </Text>
+        </Paper>
+      )}
       <MapContainer
         center={[parseFloat(finca?.latitud || 10.7535), parseFloat(finca?.longitud || -74.678)]}
         zoom={14}
@@ -804,29 +839,69 @@ export default function Lotes() {
         </Grid.Col>
       </Grid>
 
-      <Modal opened={editOpened} onClose={closeEdit} title="Editar Lote" size="lg">
-        <LotForm
-          form={form}
-          setForm={setForm}
-          onSave={handleSaveEdit}
-          onCancel={closeEdit}
-          saving={saving}
-          isNew={false}
-          onStartDrawing={handleStartDrawing}
-        />
-      </Modal>
+      {/* Edit side panel - no modal to avoid covering the map */}
+      {editOpened && (
+        <Paper
+          withBorder
+          shadow="lg"
+          p="md"
+          style={{
+            position: 'fixed',
+            top: 80, right: 20,
+            width: 460,
+            maxHeight: 'calc(100vh - 100px)',
+            overflowY: 'auto',
+            zIndex: 1000,
+            backgroundColor: 'white',
+          }}
+        >
+          <Group justify="space-between" mb="md">
+            <Text fw={700} size="md">Editar Lote</Text>
+            <ActionIcon variant="subtle" onClick={closeEdit}><IconX size={18} /></ActionIcon>
+          </Group>
+          <LotForm
+            form={form}
+            setForm={setForm}
+            onSave={() => { handleSaveEdit(); closeEdit() }}
+            onCancel={closeEdit}
+            saving={saving}
+            isNew={false}
+            onStartDrawing={handleStartDrawing}
+          />
+        </Paper>
+      )}
 
-      <Modal opened={newOpened} onClose={closeNew} title="Nuevo Lote" size="lg">
-        <LotForm
-          form={form}
-          setForm={setForm}
-          onSave={handleSaveNew}
-          onCancel={closeNew}
-          saving={saving}
-          isNew
-          onStartDrawing={handleStartDrawing}
-        />
-      </Modal>
+      {/* Same for new */}
+      {newOpened && (
+        <Paper
+          withBorder
+          shadow="lg"
+          p="md"
+          style={{
+            position: 'fixed',
+            top: 80, right: 20,
+            width: 460,
+            maxHeight: 'calc(100vh - 100px)',
+            overflowY: 'auto',
+            zIndex: 1000,
+            backgroundColor: 'white',
+          }}
+        >
+          <Group justify="space-between" mb="md">
+            <Text fw={700} size="md">Nuevo Lote</Text>
+            <ActionIcon variant="subtle" onClick={closeNew}><IconX size={18} /></ActionIcon>
+          </Group>
+          <LotForm
+            form={form}
+            setForm={setForm}
+            onSave={() => { handleSaveNew(); closeNew() }}
+            onCancel={closeNew}
+            saving={saving}
+            isNew
+            onStartDrawing={handleStartDrawing}
+          />
+        </Paper>
+      )}
     </Stack>
   )
 }
