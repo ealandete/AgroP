@@ -58,6 +58,9 @@ import InicioVeterinario from './pages/InicioVeterinario.jsx'
 import InicioContador from './pages/InicioContador.jsx'
 import InicioAsistente from './pages/InicioAsistente.jsx'
 import Backup from './pages/Backup.jsx'
+import Mercado from './pages/Mercado.jsx'
+import Mejoramiento from './pages/Mejoramiento.jsx'
+import Residuos from './pages/Residuos.jsx'
 
 const ROLE_HOME = {
   admin: '/inicio-propietario',
@@ -140,6 +143,9 @@ export default function App() {
           <Route path="inicio-contador" element={<InicioContador />} />
           <Route path="inicio-asistente" element={<InicioAsistente />} />
           <Route path="backup" element={<Backup />} />
+          <Route path="mercado" element={<Mercado />} />
+          <Route path="mejoramiento" element={<Mejoramiento />} />
+          <Route path="residuos" element={<Residuos />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

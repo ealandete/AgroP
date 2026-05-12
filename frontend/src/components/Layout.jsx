@@ -16,6 +16,7 @@ import {
   IconShield, IconShieldCheck, IconCertificate, IconDroplet, IconApple, IconQrcode, IconFish,
   IconStethoscope, IconBulldozer, IconDeviceSdCard, IconTree,
   IconBulb, IconPalette, IconDatabase, IconHorse, IconTruckDelivery,
+  IconTrendingUp, IconDna, IconRecycle,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import { useModo } from '../store/ModoContext.jsx'
@@ -49,6 +50,7 @@ const NAV_ITEMS = [
   { label: 'Suelos/Análisis', icon: IconBulldozer, to: '/suelos', section: 'core' },
   { label: 'Sensores', icon: IconDeviceSdCard, to: '/sensores', section: 'core' },
   { label: 'Forestal', icon: IconTree, to: '/forestal', section: 'core' },
+  { label: 'Mejoramiento', icon: IconDna, to: '/mejoramiento', section: 'core' },
   { label: 'Equinos', icon: IconHorse, to: '/equinos', section: 'core' },
   { label: 'Especies', icon: IconPlant, to: '/especies', section: 'especies' },
   { label: 'Mascotas', icon: IconDog, to: '/mascotas', section: 'especies' },
@@ -63,8 +65,10 @@ const NAV_ITEMS = [
   { label: 'Procedimientos Vet', icon: IconStethoscope, to: '/procedimientos-veterinarios', section: 'gestion' },
   { label: 'Certificaciones', icon: IconCertificate, to: '/certificaciones', section: 'gestion' },
   { label: 'Certificados', icon: IconTruckDelivery, to: '/certificados', section: 'gestion' },
+  { label: 'Residuos/Compost', icon: IconRecycle, to: '/residuos', section: 'gestion' },
   { label: 'Trazabilidad', icon: IconSearch, to: '/trazabilidad', section: 'gestion' },
   { label: 'Estadísticas', icon: IconChartBar, to: '/estadisticas', section: 'analisis' },
+  { label: 'Precios Mercado', icon: IconTrendingUp, to: '/mercado', section: 'analisis' },
   { label: 'Recomendaciones', icon: IconBulb, to: '/recomendaciones', section: 'analisis' },
   { label: 'Reportes', icon: IconFileDownload, to: '/exportar', section: 'analisis' },
   { label: 'Cumplimiento', icon: IconShieldCheck, to: '/cumplimiento', section: 'sistema' },
@@ -143,6 +147,9 @@ const ROUTE_NAMES = {
   '/recomendaciones': 'Recomendaciones',
   '/cumplimiento': 'Cumplimiento Normativo',
   '/personalizacion': 'Personalización',
+  '/mercado': 'Precios Mercado',
+  '/mejoramiento': 'Mejoramiento Genético',
+  '/residuos': 'Residuos/Compost',
 }
 
 export default function Layout() {

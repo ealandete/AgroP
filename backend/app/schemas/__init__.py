@@ -1722,3 +1722,216 @@ class CrecimientoForestalOut(CrecimientoForestalBase):
 
     class Config:
         from_attributes = True
+
+
+# ============================================================
+# SCHEMAS MERCADO - Precios de mercado
+# ============================================================
+
+class PrecioReferenciaOut(BaseModel):
+    producto: str
+    precio_ref: float
+    unidad: str
+    categoria: str = "general"
+
+class TendenciaOut(BaseModel):
+    mes: str
+    precio: float
+
+class PrecioUsuarioCreate(BaseModel):
+    producto: str
+    precio: float
+    unidad: Optional[str] = None
+
+class PrecioUsuarioOut(BaseModel):
+    id: int
+    producto: str
+    precio: float
+    unidad: Optional[str]
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class ResumenMercado(BaseModel):
+    total_productos: int
+    productos_ajustados: int
+    tendencia_general: str = ""
+
+
+# ============================================================
+# SCHEMAS MEJORAMIENTO - Genética y reproducción avanzada
+# ============================================================
+
+class ReproductorCreate(BaseModel):
+    animal_id: int
+    tipo: str
+    registro_ica: Optional[str] = None
+    registro_asociacion: Optional[str] = None
+    evaluacion_genetica: Optional[Any] = None
+    score_conformacion: Optional[int] = None
+    score_temperamento: Optional[int] = None
+    fecha_ultima_evaluacion: Optional[date] = None
+    proxima_evaluacion: Optional[date] = None
+    semen_disponible: bool = False
+    precio_semen: Optional[float] = None
+    precio_monta: Optional[float] = None
+    pedigree: Optional[Any] = None
+    activo: bool = True
+
+class ReproductorUpdate(BaseModel):
+    tipo: Optional[str] = None
+    registro_ica: Optional[str] = None
+    registro_asociacion: Optional[str] = None
+    evaluacion_genetica: Optional[Any] = None
+    score_conformacion: Optional[int] = None
+    score_temperamento: Optional[int] = None
+    fecha_ultima_evaluacion: Optional[date] = None
+    proxima_evaluacion: Optional[date] = None
+    semen_disponible: Optional[bool] = None
+    precio_semen: Optional[float] = None
+    precio_monta: Optional[float] = None
+    pedigree: Optional[Any] = None
+    activo: Optional[bool] = None
+
+class ReproductorOut(BaseModel):
+    id: int
+    animal_id: int
+    tipo: str
+    registro_ica: Optional[str]
+    registro_asociacion: Optional[str]
+    evaluacion_genetica: Optional[Any]
+    score_conformacion: Optional[int]
+    score_temperamento: Optional[int]
+    fecha_ultima_evaluacion: Optional[date]
+    proxima_evaluacion: Optional[date]
+    semen_disponible: bool
+    precio_semen: Optional[float]
+    precio_monta: Optional[float]
+    pedigree: Optional[Any]
+    activo: bool
+    animal_codigo: Optional[str] = None
+    animal_nombre: Optional[str] = None
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class EmpadreCreate(BaseModel):
+    reproductor_id: int
+    receptora_id: int
+    fecha: date
+    tipo: str = "monta"
+    observaciones: Optional[str] = None
+
+class EmpadreOut(BaseModel):
+    id: int
+    reproductor_id: int
+    receptora_id: int
+    fecha: date
+    tipo: str
+    resultado: str
+    fecha_resultado: Optional[date]
+    observaciones: Optional[str]
+    reproductor_nombre: Optional[str] = None
+    receptora_codigo: Optional[str] = None
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class HijoReproductorOut(BaseModel):
+    id: int
+    animal_id: int
+    empadre_id: Optional[int]
+    animal_codigo: Optional[str] = None
+    animal_nombre: Optional[str] = None
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class EstadisticasMejoramiento(BaseModel):
+    total_reproductores: int
+    reproductores_activos: int
+    empadres_mes: int
+    tasa_exito_pct: float = 0
+    total_hijos: int = 0
+    progreso_genetico: str = ""
+
+
+# ============================================================
+# SCHEMAS RESIDUOS - Gestión de residuos y compost
+# ============================================================
+
+class ResiduoCreate(BaseModel):
+    tipo: str
+    origen: str
+    cantidad_kg: float
+    fecha: date
+    disposicion: str
+    observaciones: Optional[str] = None
+
+class ResiduoOut(BaseModel):
+    id: int
+    finca_id: int
+    tipo: str
+    origen: str
+    cantidad_kg: float
+    fecha: date
+    disposicion: str
+    observaciones: Optional[str]
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class CompostCreate(BaseModel):
+    nombre: str
+    fecha_inicio: date
+    fecha_estimada_fin: Optional[date] = None
+    materiales: Optional[Any] = None
+    volumen_m3: Optional[float] = None
+    temperatura: Optional[float] = None
+    humedad: Optional[float] = None
+    estado: str = "activo"
+    observaciones: Optional[str] = None
+
+class CompostUpdate(BaseModel):
+    nombre: Optional[str] = None
+    fecha_inicio: Optional[date] = None
+    fecha_estimada_fin: Optional[date] = None
+    fecha_fin: Optional[date] = None
+    materiales: Optional[Any] = None
+    volumen_m3: Optional[float] = None
+    temperatura: Optional[float] = None
+    humedad: Optional[float] = None
+    estado: Optional[str] = None
+    observaciones: Optional[str] = None
+
+class CompostOut(BaseModel):
+    id: int
+    finca_id: int
+    nombre: str
+    fecha_inicio: date
+    fecha_estimada_fin: Optional[date]
+    fecha_fin: Optional[date]
+    materiales: Optional[Any]
+    volumen_m3: Optional[float]
+    temperatura: Optional[float]
+    humedad: Optional[float]
+    estado: str
+    observaciones: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class EstadisticasResiduos(BaseModel):
+    total_residuos_mes: float = 0
+    compost_activo: int = 0
+    tasa_reciclaje_pct: float = 0
+    proximo_compost_listo: Optional[str] = None
+    desglose_tipo: list[dict] = []

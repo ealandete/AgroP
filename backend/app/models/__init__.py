@@ -1632,3 +1632,117 @@ class ProcedimientoVeterinario(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     animal = relationship("Animal")
+
+
+# ============================================================
+# MODELOS MERCADO - Precios de usuario
+# ============================================================
+
+class PrecioUsuario(Base):
+    __tablename__ = "precios_usuario"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    producto = Column(String(100), nullable=False)
+    precio = Column(DECIMAL(12, 2), nullable=False)
+    unidad = Column(String(30))
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    finca = relationship("Finca")
+
+
+# ============================================================
+# MODELOS MEJORAMIENTO - Reproducción avanzada y genética
+# ============================================================
+
+class Reproductor(Base):
+    __tablename__ = "reproductores"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    animal_id = Column(Integer, ForeignKey("animales.id"), nullable=False)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    tipo = Column(String(30), nullable=False)
+    registro_ica = Column(String(50))
+    registro_asociacion = Column(String(50))
+    evaluacion_genetica = Column(JSON)
+    score_conformacion = Column(Integer)
+    score_temperamento = Column(Integer)
+    fecha_ultima_evaluacion = Column(Date)
+    proxima_evaluacion = Column(Date)
+    semen_disponible = Column(Boolean, default=False)
+    precio_semen = Column(DECIMAL(12, 2))
+    precio_monta = Column(DECIMAL(12, 2))
+    pedigree = Column(JSON)
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    animal = relationship("Animal")
+    finca = relationship("Finca")
+
+
+class Empadre(Base):
+    __tablename__ = "empadres"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    reproductor_id = Column(Integer, ForeignKey("reproductores.id"), nullable=False)
+    receptora_id = Column(Integer, ForeignKey("animales.id"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    tipo = Column(String(20), nullable=False)
+    resultado = Column(String(30), default="pendiente")
+    fecha_resultado = Column(Date)
+    observaciones = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    reproductor = relationship("Reproductor")
+    receptora = relationship("Animal")
+
+
+class HijoReproductor(Base):
+    __tablename__ = "hijos_reproductor"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    reproductor_id = Column(Integer, ForeignKey("reproductores.id"), nullable=False)
+    animal_id = Column(Integer, ForeignKey("animales.id"), nullable=False)
+    empadre_id = Column(Integer, ForeignKey("empadres.id"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    reproductor = relationship("Reproductor")
+    animal = relationship("Animal")
+
+
+# ============================================================
+# MODELOS RESIDUOS - Gestión de residuos y compostaje
+# ============================================================
+
+class Residuo(Base):
+    __tablename__ = "residuos"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    tipo = Column(String(30), nullable=False)
+    origen = Column(String(50), nullable=False)
+    cantidad_kg = Column(DECIMAL(10, 2), nullable=False)
+    fecha = Column(Date, nullable=False)
+    disposicion = Column(String(30), nullable=False)
+    observaciones = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+
+    finca = relationship("Finca")
+
+
+class Compost(Base):
+    __tablename__ = "compost"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    nombre = Column(String(100), nullable=False)
+    fecha_inicio = Column(Date, nullable=False)
+    fecha_estimada_fin = Column(Date)
+    fecha_fin = Column(Date)
+    materiales = Column(JSON)
+    volumen_m3 = Column(DECIMAL(8, 2))
+    temperatura = Column(DECIMAL(5, 1))
+    humedad = Column(DECIMAL(5, 1))
+    estado = Column(String(30), default="activo")
+    observaciones = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    finca = relationship("Finca")

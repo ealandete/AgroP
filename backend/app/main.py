@@ -37,6 +37,9 @@ from app.routers.recomendaciones import router as recomendaciones_router
 from app.routers.cumplimiento import router as cumplimiento_router
 from app.routers.logo import router as logo_router
 from app.routers.backup import router as backup_router
+from app.routers.mercado import router as mercado_router
+from app.routers.mejoramiento import router as mejoramiento_router
+from app.routers.residuos import router as residuos_router
 
 tags_metadata = [
     {"name": "Autenticacion", "description": "Login, registro, tokens"},
@@ -175,6 +178,9 @@ app.include_router(recomendaciones_router)
 app.include_router(cumplimiento_router)
 app.include_router(logo_router)
 app.include_router(backup_router)
+app.include_router(mercado_router)
+app.include_router(mejoramiento_router)
+app.include_router(residuos_router)
 
 # Mount static logos directory
 logos_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "logos")
