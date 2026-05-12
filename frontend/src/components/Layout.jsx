@@ -15,10 +15,12 @@ import {
   IconSearch, IconAlertTriangle, IconMail, IconMedicineSyrup, IconTractor,
   IconShield, IconShieldCheck, IconCertificate, IconDroplet, IconApple, IconQrcode, IconFish,
   IconStethoscope, IconBulldozer, IconDeviceSdCard, IconTree,
-  IconBulb,
+  IconBulb, IconPalette,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import { useModo } from '../store/ModoContext.jsx'
+import { useTema } from '../store/TemaContext.jsx'
+import { API_URL } from '../config.js'
 import api from '../services/api.js'
 import Breadcrumbs from './Breadcrumbs.jsx'
 import ModoSencillo from './ModoSencillo.jsx'
@@ -64,6 +66,7 @@ const NAV_ITEMS = [
   { label: 'Cumplimiento', icon: IconShieldCheck, to: '/cumplimiento', section: 'sistema' },
   { label: 'Admin Sistema', icon: IconSettings, to: '/admin-sistema', section: 'sistema' },
   { label: 'Configuración', icon: IconSettings, to: '/configuracion', section: 'sistema' },
+  { label: 'Personalizar', icon: IconPalette, to: '/personalizacion', section: 'sistema' },
 ]
 
 const ROLE_NAV_ACCESS = {
@@ -132,6 +135,7 @@ const ROUTE_NAMES = {
   '/forestal': 'Forestal',
   '/recomendaciones': 'Recomendaciones',
   '/cumplimiento': 'Cumplimiento Normativo',
+  '/personalizacion': 'Personalización',
 }
 
 export default function Layout() {
@@ -150,6 +154,21 @@ export default function Layout() {
   const [qrScannerOpened, setQrScannerOpened] = useState(false)
   const { modoSencillo, toggleModoSencillo } = useModo()
   const touchStartX = useRef(0)
+  const { tema } = useTema()
+  const [logoSrc, setLogoSrc] = useState(null)
+
+  const logoId = fincaActiva || 'global'
+  const loadLogo = () => {
+    setLogoSrc(`${API_URL}/logo/${logoId}?t=${Date.now()}`)
+  }
+
+  useEffect(() => { loadLogo() }, [logoId])
+
+  useEffect(() => {
+    const handler = () => loadLogo()
+    window.addEventListener('logo-updated', handler)
+    return () => window.removeEventListener('logo-updated', handler)
+  }, [logoId])
 
   useEffect(() => {
     if (!isMobileHook) return
@@ -234,8 +253,24 @@ export default function Layout() {
         <Group h="100%" px={{ base: 'xs', sm: 'md' }} justify="space-between">
           <Group>
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-            <IconPlant size={28} color={theme.colors.green[7]} />
-            <Text fw={700} size="lg" c="green.8">AgroP</Text>
+            <Box
+              component="a"
+              href="#"
+              onClick={(e) => { e.preventDefault(); navigate('/personalizacion') }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+            >
+              {logoSrc ? (
+                <img
+                  src={logoSrc}
+                  alt="Logo"
+                  style={{ height: 28, width: 'auto', maxWidth: 120 }}
+                  onError={() => setLogoSrc(null)}
+                />
+              ) : (
+                <IconPlant size={28} color={theme.colors.green[7]} />
+              )}
+              <Text fw={700} size="lg" c="green.8">AgroP</Text>
+            </Box>
             {isMobile ? (
               <MantineSelect
                 data={fincas.map(f => ({ value: f.id.toString(), label: f.nombre }))}

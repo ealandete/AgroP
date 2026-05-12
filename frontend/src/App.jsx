@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './store/AuthContext.jsx'
 import { ModoProvider } from './store/ModoContext.jsx'
+import { TemaProvider } from './store/TemaContext.jsx'
 import Layout from './components/Layout.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
@@ -14,6 +15,7 @@ import Operaciones from './pages/Operaciones.jsx'
 import Planeacion from './pages/Planeacion.jsx'
 import Exportar from './pages/Exportar.jsx'
 import Configuracion from './pages/Configuracion.jsx'
+import Personalizacion from './pages/Personalizacion.jsx'
 import Avicola from './pages/Avicola.jsx'
 import Porcicola from './pages/Porcicola.jsx'
 import Apicultura from './pages/Apicultura.jsx'
@@ -79,7 +81,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<ProtectedRoute><ModoProvider><Layout /></ModoProvider></ProtectedRoute>}>
+        <Route path="/" element={<ProtectedRoute><ModoProvider><TemaProvider><Layout /></TemaProvider></ModoProvider></ProtectedRoute>}>
           <Route index element={<HomeRedirect />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="animales" element={<Animales />} />
@@ -92,6 +94,7 @@ export default function App() {
           <Route path="planeacion" element={<Planeacion />} />
           <Route path="exportar" element={<Exportar />} />
           <Route path="configuracion" element={<Configuracion />} />
+          <Route path="personalizacion" element={<Personalizacion />} />
           <Route path="especies" element={<EspeciesMenu />} />
           <Route path="avicola" element={<Avicola />} />
           <Route path="porcicola" element={<Porcicola />} />

@@ -34,6 +34,7 @@ from app.routers.forestal import router as forestal_router
 from app.routers import procedimientos
 from app.routers.recomendaciones import router as recomendaciones_router
 from app.routers.cumplimiento import router as cumplimiento_router
+from app.routers.logo import router as logo_router
 
 tags_metadata = [
     {"name": "Autenticacion", "description": "Login, registro, tokens"},
@@ -169,7 +170,12 @@ app.include_router(forestal_router)
 app.include_router(procedimientos.router)
 app.include_router(recomendaciones_router)
 app.include_router(cumplimiento_router)
+app.include_router(logo_router)
 
+# Mount static logos directory
+logos_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static", "logos")
+os.makedirs(logos_dir, exist_ok=True)
+app.mount("/static/logos", StaticFiles(directory=logos_dir), name="logos")
 
 @app.get("/api/health")
 def health():
