@@ -15,11 +15,12 @@ import {
   IconSearch, IconAlertTriangle, IconMail, IconMedicineSyrup, IconTractor,
   IconShield, IconShieldCheck, IconCertificate, IconDroplet, IconApple, IconQrcode, IconFish,
   IconStethoscope, IconBulldozer, IconDeviceSdCard, IconTree,
-  IconBulb, IconPalette,
+  IconBulb, IconPalette, IconDatabase,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import { useModo } from '../store/ModoContext.jsx'
 import { useTema } from '../store/TemaContext.jsx'
+import { useIdioma } from '../store/IdiomaContext.jsx'
 import { API_URL } from '../config.js'
 import api from '../services/api.js'
 import Breadcrumbs from './Breadcrumbs.jsx'
@@ -64,6 +65,7 @@ const NAV_ITEMS = [
   { label: 'Recomendaciones', icon: IconBulb, to: '/recomendaciones', section: 'analisis' },
   { label: 'Reportes', icon: IconFileDownload, to: '/exportar', section: 'analisis' },
   { label: 'Cumplimiento', icon: IconShieldCheck, to: '/cumplimiento', section: 'sistema' },
+  { label: 'Respaldos', icon: IconDatabase, to: '/backup', section: 'sistema' },
   { label: 'Admin Sistema', icon: IconSettings, to: '/admin-sistema', section: 'sistema' },
   { label: 'Configuración', icon: IconSettings, to: '/configuracion', section: 'sistema' },
   { label: 'Personalizar', icon: IconPalette, to: '/personalizacion', section: 'sistema' },
@@ -144,6 +146,7 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout, role, activeRole, setActiveRole, isAdmin } = useAuth()
+  const { t, idioma, setIdioma, IDIOMAS } = useIdioma()
   const [fincas, setFincas] = useState([])
   const [mensajesNoLeidos, setMensajesNoLeidos] = useState(0)
   const [fincaActiva, setFincaActiva] = useState(() => localStorage.getItem('agrop_finca_id') || '')
@@ -360,14 +363,26 @@ export default function Layout() {
                 onClick={toggleModoSencillo}
                 c={modoSencillo ? 'green' : undefined}
               >
-                {modoSencillo ? '✨ Modo Sencillo' : 'Modo Sencillo'}
+                {modoSencillo ? `✨ ${t('modo_sencillo')}` : t('modo_sencillo')}
               </Menu.Item>
               <Menu.Item leftSection={<IconSettings size={16} />} onClick={() => navigate('/configuracion')}>
-                Configuración
+                {t('configuracion')}
               </Menu.Item>
               <Menu.Divider />
+              <Menu.Label>{t('cambiar_idioma')} - {idioma === 'es' ? '🌐' : '🌐'}</Menu.Label>
+              {Object.entries(IDIOMAS).map(([key, lang]) => (
+                <Menu.Item
+                  key={key}
+                  onClick={() => setIdioma(key)}
+                  leftSection={<Text>{lang.bandera}</Text>}
+                  rightSection={idioma === key ? <IconCheck size={16} /> : null}
+                >
+                  {lang.nombre}
+                </Menu.Item>
+              ))}
+              <Menu.Divider />
               <Menu.Item color="red" leftSection={<IconLogout size={16} />} onClick={logout}>
-                Cerrar Sesión
+                {t('cerrar_sesion')}
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
@@ -375,13 +390,13 @@ export default function Layout() {
       </AppShell.Header>
 
       <AppShell.Navbar p={{ base: 'xs', sm: 'sm' }}>
-        {(() => {
+          {(() => {
           const sections = {
-            core: { label: 'PRODUCCIÓN', color: 'green' },
-            especies: { label: 'ESPECIES', color: 'blue' },
-            gestion: { label: 'GESTIÓN', color: 'orange' },
-            analisis: { label: 'ANÁLISIS', color: 'grape' },
-            sistema: { label: 'SISTEMA', color: 'gray' },
+            core: { label: t('sec_produccion'), color: 'green' },
+            especies: { label: t('sec_especies'), color: 'blue' },
+            gestion: { label: t('sec_gestion'), color: 'orange' },
+            analisis: { label: t('sec_analisis'), color: 'grape' },
+            sistema: { label: t('sec_sistema'), color: 'gray' },
           }
           let currentSection = ''
           return filteredNavItems.flatMap((item) => {
@@ -422,7 +437,7 @@ export default function Layout() {
       <AppShell.Main>
         {modoSencillo && (
           <Paper p="xs" mb="sm" bg="green.1" c="green.8" fw={500} style={{ borderRadius: 8 }}>
-            ✨ Modo Sencillo activo
+            {t('modo_sencillo_activo')}
           </Paper>
         )}
         <Box hiddenFrom="xs" mb="xs">
@@ -444,11 +459,11 @@ export default function Layout() {
         >
           <Group justify="space-around" gap={0} py={4}>
             {[
-              { icon: IconDashboard, label: 'Inicio', to: '/' },
-              { icon: IconPig, label: 'Animales', to: '/animales' },
-              { icon: IconPlant, label: 'Cultivos', to: '/cultivos' },
-              { icon: IconMap, label: 'Lotes', to: '/lotes' },
-              { icon: IconStethoscope, label: 'Vet', to: '/procedimientos-veterinarios' },
+              { icon: IconDashboard, label: t('inicio'), to: '/' },
+              { icon: IconPig, label: t('animales'), to: '/animales' },
+              { icon: IconPlant, label: t('nav_cultivos'), to: '/cultivos' },
+              { icon: IconMap, label: t('lotes_mobile'), to: '/lotes' },
+              { icon: IconStethoscope, label: t('vet'), to: '/procedimientos-veterinarios' },
             ].map(item => {
               const active = location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))
               return (

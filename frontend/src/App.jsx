@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './store/AuthContext.jsx'
 import { ModoProvider } from './store/ModoContext.jsx'
 import { TemaProvider } from './store/TemaContext.jsx'
+import { IdiomaProvider } from './store/IdiomaContext.jsx'
 import Layout from './components/Layout.jsx'
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
@@ -54,6 +55,7 @@ import InicioCapataz from './pages/InicioCapataz.jsx'
 import InicioVeterinario from './pages/InicioVeterinario.jsx'
 import InicioContador from './pages/InicioContador.jsx'
 import InicioAsistente from './pages/InicioAsistente.jsx'
+import Backup from './pages/Backup.jsx'
 
 const ROLE_HOME = {
   admin: '/inicio-propietario',
@@ -81,7 +83,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<ProtectedRoute><ModoProvider><TemaProvider><Layout /></TemaProvider></ModoProvider></ProtectedRoute>}>
+        <Route path="/" element={<ProtectedRoute><ModoProvider><TemaProvider><IdiomaProvider><Layout /></IdiomaProvider></TemaProvider></ModoProvider></ProtectedRoute>}>
           <Route index element={<HomeRedirect />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="animales" element={<Animales />} />
@@ -133,6 +135,7 @@ export default function App() {
           <Route path="inicio-veterinario" element={<InicioVeterinario />} />
           <Route path="inicio-contador" element={<InicioContador />} />
           <Route path="inicio-asistente" element={<InicioAsistente />} />
+          <Route path="backup" element={<Backup />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

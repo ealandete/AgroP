@@ -186,14 +186,10 @@ function TabTelegram() {
     setProbando(true)
     try {
       await guardarConfig()
-      const msg = encodeURIComponent('✅ AgroP: Conexión exitosa con Telegram')
-      await api.get(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${msg}`, {
-        baseURL: '',
-        headers: {},
-      })
-      notifications.show({ title: 'Conectado', message: 'Mensaje de prueba enviado correctamente', color: 'green' })
+      const r = await api.post('/alertas/notificar-telegram-probar')
+      notifications.show({ title: 'Conectado', message: r.data.mensaje, color: 'green' })
     } catch (err) {
-      notifications.show({ title: 'Error', message: 'No se pudo enviar el mensaje de prueba. Verifica token y chat ID.', color: 'red' })
+      notifications.show({ title: 'Error', message: err.response?.data?.detail || 'No se pudo enviar el mensaje de prueba. Verifica token y chat ID.', color: 'red' })
     }
     setProbando(false)
   }

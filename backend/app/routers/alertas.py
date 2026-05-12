@@ -286,6 +286,39 @@ def notificar_telegram(
     return {"mensaje": "Notificación enviada a Telegram", "total": len(alerts)}
 
 
+@router.post("/notificar-telegram-probar")
+def notificar_telegram_probar(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    bot = db.query(Parametro).filter(Parametro.clave == "telegram_bot_token").first()
+    chat = db.query(Parametro).filter(Parametro.clave == "telegram_chat_id").first()
+    if not bot or not bot.valor:
+        raise HTTPException(status_code=400, detail="Bot token de Telegram no configurado")
+    if not chat or not chat.valor:
+        raise HTTPException(status_code=400, detail="Chat ID de Telegram no configurado")
+
+    import requests
+    try:
+        resp = requests.post(
+            f"https://api.telegram.org/bot{bot.valor}/sendMessage",
+            json={
+                "chat_id": chat.valor,
+                "text": "✅ *AgroP* - Prueba de conexión exitosa\\n\\nEl sistema de notificaciones está funcionando correctamente.",
+                "parse_mode": "Markdown",
+                "disable_web_page_preview": True,
+            },
+            timeout=15,
+        )
+        data = resp.json()
+        if not data.get("ok"):
+            raise HTTPException(status_code=502, detail=f"Telegram error: {data.get('description', 'unknown')}")
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Error connecting to Telegram API: {str(e)}")
+
+    return {"mensaje": "Mensaje de prueba enviado correctamente a Telegram"}
+
+
 @router.get("/config-telegram", response_model=TelegramConfig)
 def get_config_telegram(
     db: Session = Depends(get_db),

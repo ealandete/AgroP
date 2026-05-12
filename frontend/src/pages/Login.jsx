@@ -2,16 +2,18 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Container, Paper, Title, TextInput, PasswordInput,
-  Button, Text, Stack, Alert, Anchor,
+  Button, Text, Stack, Alert, Anchor, Group, ActionIcon,
 } from '@mantine/core'
-import { IconPlant, IconAlertCircle } from '@tabler/icons-react'
+import { IconPlant, IconAlertCircle, IconLanguage } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
+import { useIdioma } from '../store/IdiomaContext.jsx'
 
 export default function Login() {
   const [email, setEmail] = useState('admin@agrop.local')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const { login, loading } = useAuth()
+  const { t, idioma, setIdioma, IDIOMAS } = useIdioma()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -27,11 +29,24 @@ export default function Login() {
 
   return (
     <Container size={420} my={80}>
-      <Paper radius="md" p="xl" withBorder shadow="md">
+      <Paper radius="md" p="xl" withBorder shadow="md" style={{ position: 'relative' }}>
+        <Group justify="flex-end" mb="sm">
+          {Object.entries(IDIOMAS).map(([key, lang]) => (
+            <ActionIcon
+              key={key}
+              variant={idioma === key ? 'filled' : 'subtle'}
+              color="green"
+              onClick={() => setIdioma(key)}
+              size="sm"
+            >
+              <Text size="lg">{lang.bandera}</Text>
+            </ActionIcon>
+          ))}
+        </Group>
         <Stack align="center" mb="lg">
           <IconPlant size={48} color="var(--mantine-color-green-7)" />
           <Title order={2}>AgroP</Title>
-          <Text size="sm" c="dimmed">Sistema de Gestión Agropecuaria</Text>
+          <Text size="sm" c="dimmed">{t('login_subtitulo')}</Text>
         </Stack>
 
         {error && (
@@ -43,27 +58,27 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
           <Stack>
             <TextInput
-              label="Email"
-              placeholder="admin@agrop.local"
+              label={t('login_email')}
+              placeholder={t('login_placeholder_email')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
             <PasswordInput
-              label="Contraseña"
-              placeholder="Tu contraseña"
+              label={t('login_password')}
+              placeholder={t('login_placeholder_password')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
             <Button type="submit" fullWidth loading={loading} mt="md">
-              Ingresar
+              {t('login_ingresar')}
             </Button>
           </Stack>
         </form>
 
         <Text size="xs" c="dimmed" ta="center" mt="xl">
-          admin@agrop.local / admin123
+          {t('login_hint')}
         </Text>
       </Paper>
     </Container>
