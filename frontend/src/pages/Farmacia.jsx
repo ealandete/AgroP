@@ -8,7 +8,7 @@ import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import {
   IconPill, IconPlus, IconEdit, IconTrash, IconAlertTriangle,
-  IconPackage, IconStethoscope, IconCalendarDue,
+  IconBox, IconStethoscope, IconCalendarDue,
 } from '@tabler/icons-react'
 import dayjs from 'dayjs'
 import api from '../services/api.js'
@@ -368,7 +368,7 @@ export default function Farmacia() {
       <Tabs defaultValue="medicamentos">
         <Tabs.List>
           <Tabs.Tab value="medicamentos" leftSection={<IconPill size={16} />}>Medicamentos</Tabs.Tab>
-          <Tabs.Tab value="inventario" leftSection={<IconPackage size={16} />}>Inventario</Tabs.Tab>
+          <Tabs.Tab value="inventario" leftSection={<IconBox size={16} />}>Inventario</Tabs.Tab>
           <Tabs.Tab value="aplicaciones" leftSection={<IconStethoscope size={16} />}>Aplicaciones</Tabs.Tab>
         </Tabs.List>
 

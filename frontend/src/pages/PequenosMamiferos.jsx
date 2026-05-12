@@ -5,7 +5,7 @@ import {
 } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
-import { IconPlus, IconEdit, IconTrash, IconPaw, IconVaccine, IconHeartbeat, IconWeight, IconBabyBottle } from '@tabler/icons-react'
+import { IconPlus, IconEdit, IconTrash, IconPaw, IconVaccine, IconHeartbeat, IconWeight, IconBabyBottle, IconBone } from '@tabler/icons-react'
 import api from '../services/api.js'
 import { formatNumber } from '../config.js'
 
@@ -13,8 +13,6 @@ const ESPECIES_PEQUENAS = [
   { value: 'conejo', label: 'Conejo' },
   { value: 'chiguiro', label: 'Chigüiro' },
   { value: 'cuy', label: 'Cuy' },
-  { value: 'perro', label: 'Perro' },
-  { value: 'gato', label: 'Gato' },
 ]
 
 const ETAPAS = [
@@ -42,7 +40,7 @@ export default function PequenosMamiferos() {
 
   const loadAnimales = async () => {
     try {
-      const especies = ['conejo', 'chiguiro', 'cuy', 'perro', 'gato']
+      const especies = ['conejo', 'chiguiro', 'cuy']
       const resultados = await Promise.all(
         especies.map(esp => api.get(`/animales/?especie=${esp}`).then(r => r.data).catch(() => []))
       )

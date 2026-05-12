@@ -21,9 +21,11 @@ import Avicola from './pages/Avicola.jsx'
 import Porcicola from './pages/Porcicola.jsx'
 import Apicultura from './pages/Apicultura.jsx'
 import Equinos from './pages/Equinos.jsx'
+import Mascotas from './pages/Mascotas.jsx'
 import CaninosFelinos from './pages/CaninosFelinos.jsx'
 import PequenosMamiferos from './pages/PequenosMamiferos.jsx'
 import EspeciesMenu from './pages/EspeciesMenu.jsx'
+import Certificados from './pages/Certificados.jsx'
 import FichaAnimal from './pages/FichaAnimal.jsx'
 import FichaCultivo from './pages/FichaCultivo.jsx'
 import GruposManejo from './pages/GruposManejo.jsx'
@@ -102,8 +104,10 @@ export default function App() {
           <Route path="porcicola" element={<Porcicola />} />
           <Route path="apicultura" element={<Apicultura />} />
           <Route path="equinos" element={<Equinos />} />
+          <Route path="mascotas" element={<Mascotas />} />
           <Route path="caninos-felinos" element={<CaninosFelinos />} />
           <Route path="pequenos-mamiferos" element={<PequenosMamiferos />} />
+          <Route path="certificados" element={<Certificados />} />
           <Route path="ficha-animal" element={<FichaAnimal />} />
           <Route path="cultivos/ficha" element={<FichaCultivo />} />
           <Route path="contabilidad" element={<Contabilidad />} />

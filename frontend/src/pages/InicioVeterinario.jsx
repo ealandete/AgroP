@@ -6,7 +6,7 @@ import {
 import {
   IconHeartbeat, IconVaccine, IconAlertTriangle,
   IconCalendarEvent, IconStethoscope, IconShield,
-  IconPig, IconBabyCarriageCarriage, IconReportMedical, IconNeedle,
+  IconPig, IconBabyCarriage, IconReportMedical, IconNeedle,
   IconClipboardHeart, IconActivity,
 } from '@tabler/icons-react'
 import api from '../services/api'

@@ -9,7 +9,7 @@ import { notifications } from '@mantine/notifications'
 import {
   IconHelp, IconX, IconBulb, IconBook, IconVocabulary,
   IconVideo, IconKeyboard, IconSearch, IconMap, IconPlant, IconCoin,
-  IconPig, IconDashboard, IconUsers, IconPackage, IconAlertTriangle,
+  IconPig, IconDashboard, IconUsers, IconBox, IconAlertTriangle,
   IconCalendarEvent, IconActivity, IconChartBar, IconFileDownload,
   IconShield, IconCertificate, IconBug, IconMail, IconDeviceSdCard,
   IconFish, IconTree, IconDroplet, IconApple, IconMedicineSyrup,
@@ -267,7 +267,7 @@ const ROUTE_HELP = {
   '/inventario': {
     title: 'Inventario',
     description: 'Control de insumos, productos agrícolas, concentrados, medicamentos, herramientas y todo tipo de existencias.',
-    icon: IconPackage,
+    icon: IconBox,
     tips: [
       'Clasifica items por categoría',
       'Lleva control de entradas y salidas',

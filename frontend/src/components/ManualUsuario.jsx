@@ -2,7 +2,7 @@ import { Modal, Tabs, Stack, Text, Title, Group, ThemeIcon, Badge, Kbd, List, An
 import { useState, useMemo } from 'react'
 import {
   IconPig, IconPlant, IconMap, IconCoin, IconUsers,
-  IconCalendarEvent, IconAlertTriangle, IconPackage,
+  IconCalendarEvent, IconAlertTriangle, IconBox,
   IconActivity, IconFileDownload, IconChartBar,
   IconShield, IconCertificate, IconSearch,
   IconDashboard, IconKeyboard, IconHelp, IconBook,
@@ -35,7 +35,7 @@ const MODULES = [
   { icon: IconPaw, label: 'Especies Menores', desc: 'Gestión de porcinos, aves, equinos, ovinos, caprinos, caninos y felinos. Parámetros específicos por especie.' },
   { icon: IconCoin, label: 'Contabilidad', desc: 'Contabilidad completa con PUC colombiano integrado: facturación, costos, presupuestos, libro contable, ingresos vs gastos, balance general.' },
   { icon: IconClipboardList, label: 'Nómina', desc: 'Liquidación de nómina: salarios, prestaciones sociales, seguridad social, provisiones, comprobantes de pago, reportes a entidades.' },
-  { icon: IconPackage, label: 'Inventario', desc: 'Control de insumos, productos agrícolas, concentrados, herramientas: entradas, salidas, stock mínimo, inventarios físicos, alertas de reorden.' },
+  { icon: IconBox, label: 'Inventario', desc: 'Control de insumos, productos agrícolas, concentrados, herramientas: entradas, salidas, stock mínimo, inventarios físicos, alertas de reorden.' },
   { icon: IconUsers, label: 'Trabajadores', desc: 'Registro de empleados, roles, horarios, asistencia, contratos, afiliaciones a seguridad social, liquidación de prestaciones.' },
   { icon: IconMail, label: 'Mensajería', desc: 'Mensajería interna entre usuarios de la finca: notificaciones, compartición de archivos, registro de comunicación para auditoría.' },
   { icon: IconHealthRecognition, label: 'SST', desc: 'Seguridad y Salud en el Trabajo: matriz de peligros, ARL, capacitaciones, incidentes, accidentes, EPI, reportes a Ministerio.' },

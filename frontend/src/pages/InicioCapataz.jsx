@@ -6,7 +6,7 @@ import {
 import {
   IconCalendarEvent, IconCloudRain, IconUsers,
   IconChecklist, IconAlertCircle, IconMilk, IconUserCheck,
-  IconReport, IconPackage, IconMap, IconTemperature,
+  IconReport, IconBox, IconMap, IconTemperature,
   IconClock, IconArrowRight,
 } from '@tabler/icons-react'
 import api from '../services/api'
@@ -198,7 +198,7 @@ function AccesoRapido() {
     { label: 'Registrar Producción Leche', icon: IconMilk, color: 'blue', to: '/animales' },
     { label: 'Marcar Asistencia', icon: IconUserCheck, color: 'green', to: '/trabajadores' },
     { label: 'Reportar Novedad', icon: IconReport, color: 'orange', to: '/operaciones' },
-    { label: 'Cargar Insumo', icon: IconPackage, color: 'grape', to: '/inventario' },
+    { label: 'Cargar Insumo', icon: IconBox, color: 'grape', to: '/inventario' },
   ]
 
   return (

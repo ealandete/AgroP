@@ -11,7 +11,7 @@ import {
   IconArrowUpRight, IconArrowDownRight, IconWeight, IconStethoscope,
   IconAlertTriangle, IconCalendarEvent, IconCloudRain, IconMap,
   IconGripVertical, IconRefresh, IconVaccine,
-  IconDroplet, IconTemperature, IconSeedling, IconPackage,
+  IconDroplet, IconTemperature, IconLeaf, IconBox,
   IconHeartbeat, IconAlertCircle, IconChecklist,
   IconRobot, IconArrowRight, IconHistory,
   IconVaccine as IconVaccine2, IconActivity, IconScan,
@@ -34,8 +34,8 @@ import WeatherWidget from '../components/WeatherWidget'
 import QRScanner from '../components/QRScanner'
 
 const WIDGET_ICONS = {
-  IconCoin, IconHeart: IconStethoscope, IconPlant: IconSeedling,
-  IconPackage, IconCalendarEvent, IconBell: IconAlertTriangle,
+  IconCoin, IconHeart: IconStethoscope, IconPlant: IconLeaf,
+  IconBox, IconCalendarEvent, IconBell: IconAlertTriangle,
   IconCloud: IconCloudRain, IconMap, IconActivity: IconHistory,
   IconUsers, IconDroplet, IconGauge,
 }
@@ -445,7 +445,7 @@ function CultivosActivosWidget() {
 
   return (
     <DashboardWidget
-      title="Cultivos Activos" icon={IconSeedling} color="green"
+      title="Cultivos Activos" icon={IconLeaf} color="green"
       loading={loading} error={error} isEmpty={isEmpty}
       emptyMessage="Sin cultivos activos" onRefresh={fetchData}
     >
@@ -453,7 +453,7 @@ function CultivosActivosWidget() {
         <Box>
           <Text size="xs" c="dimmed">Siembras Activas</Text>
           <Group gap={4}>
-            <IconSeedling size={16} color="var(--mantine-color-green-6)" />
+            <IconLeaf size={16} color="var(--mantine-color-green-6)" />
             <Text fw={700} size="sm">{data?.siembras || 0}</Text>
           </Group>
         </Box>
@@ -494,7 +494,7 @@ function InventarioCriticoWidget() {
 
   return (
     <DashboardWidget
-      title="Inventario Crítico" icon={IconPackage} color="orange"
+      title="Inventario Crítico" icon={IconBox} color="orange"
       loading={loading} error={error} isEmpty={!loading && !error && items.length === 0}
       emptyMessage="Sin insumos críticos" onRefresh={fetchData}
     >
@@ -503,7 +503,7 @@ function InventarioCriticoWidget() {
           {items.map((item, i) => (
             <Group key={i} justify="space-between">
               <Group gap={4}>
-                <IconPackage size={14} color="var(--mantine-color-orange-6)" />
+                <IconBox size={14} color="var(--mantine-color-orange-6)" />
                 <Text size="xs">{item.nombre || item.insumo}</Text>
               </Group>
               <Badge color="orange" size="sm" variant="light">
@@ -1245,7 +1245,7 @@ function DashboardContent() {
             <Paper p="sm" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => navigate('/cultivos')}>
               <Group gap="xs">
                 <ThemeIcon variant="light" size="lg" radius="xl" color="green">
-                  <IconSeedling size={20} />
+                  <IconLeaf size={20} />
                 </ThemeIcon>
                 <Box style={{ flex: 1 }}>
                   <Text fw={600} size="sm">{suggestions.cosechas} {t('cosechas_activas')}</Text>
@@ -1275,7 +1275,7 @@ function DashboardContent() {
         <KPICard
           title={t('cultivos_activos')}
           value={statsLoading ? '' : formatNumber(stats?.total_siembras_activas || 0)}
-          icon={IconSeedling}
+          icon={IconLeaf}
           color="green"
           loading={statsLoading}
         />

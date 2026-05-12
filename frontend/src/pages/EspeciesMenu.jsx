@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Paper, Title, Group, Text, Stack, SimpleGrid, Badge } from '@mantine/core'
 import {
-  IconEgg, IconPig, IconBug, IconHorse, IconDog, IconCat, IconPlant,
+  IconEgg, IconPig, IconBug, IconDog, IconCat, IconPaw, IconPlant,
 } from '@tabler/icons-react'
 import api from '../services/api.js'
 
@@ -20,15 +20,11 @@ const MODULES = [
     path: '/apicultura', especie: null, desc: 'Abejas, colmenas, miel',
   },
   {
-    key: 'equinos', label: 'Equinos', icon: IconHorse, color: 'brown',
-    path: '/equinos', especie: 'equino', desc: 'Caballos, burros, mulas',
+    key: 'mascotas', label: 'Mascotas', icon: IconDog, color: 'grape',
+    path: '/mascotas', especie: null, desc: 'Perros y gatos',
   },
   {
-    key: 'caninos', label: 'Caninos y Felinos', icon: IconDog, color: 'grape',
-    path: '/caninos-felinos', especie: 'canino', desc: 'Perros y gatos',
-  },
-  {
-    key: 'pequenos', label: 'Pequeños Mamíferos', icon: IconCat, color: 'teal',
+    key: 'pequenos', label: 'Pequeños Mamíferos', icon: IconPaw, color: 'teal',
     path: '/pequenos-mamiferos', especie: 'conejo', desc: 'Conejos, chigüiros, cuyes',
   },
 ]
@@ -36,8 +32,7 @@ const MODULES = [
 const CATEGORIES = [
   { label: 'AVES', color: 'yellow', keys: ['avicola'] },
   { label: 'PORCINOS', color: 'pink', keys: ['porcicola'] },
-  { label: 'EQUINOS', color: 'brown', keys: ['equinos'] },
-  { label: 'CANINOS / FELINOS', color: 'grape', keys: ['caninos'] },
+  { label: 'MASCOTAS', color: 'grape', keys: ['mascotas'] },
   { label: 'PEQUEÑOS MAMÍFEROS', color: 'teal', keys: ['pequenos'] },
   { label: 'APICULTURA', color: 'orange', keys: ['apicultura'] },
 ]
@@ -62,7 +57,7 @@ export default function EspeciesMenu() {
       const total = Object.values(stats).reduce((s, st) => s + (st.especie === 'aviar' ? st.total : 0), 0)
       return total || ''
     }
-    if (mod.key === 'caninos') {
+    if (mod.key === 'mascotas') {
       const caninos = Object.values(stats).reduce((s, st) => s + (st.especie === 'canino' ? st.total : 0), 0)
       const felinos = Object.values(stats).reduce((s, st) => s + (st.especie === 'felino' ? st.total : 0), 0)
       return (caninos + felinos) || ''
@@ -82,7 +77,7 @@ export default function EspeciesMenu() {
       const total = Object.values(stats).reduce((s, st) => s + (st.especie === 'aviar' ? st.activos : 0), 0)
       return total || ''
     }
-    if (mod.key === 'caninos') {
+    if (mod.key === 'mascotas') {
       const caninos = Object.values(stats).reduce((s, st) => s + (st.especie === 'canino' ? st.activos : 0), 0)
       const felinos = Object.values(stats).reduce((s, st) => s + (st.especie === 'felino' ? st.activos : 0), 0)
       return (caninos + felinos) || ''

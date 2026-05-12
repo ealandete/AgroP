@@ -27,6 +27,7 @@ from app.routers.agua import router as agua_router
 from app.routers.alimentacion import router as alimentacion_router
 from app.routers.bioseguridad import router as bioseguridad_router
 from app.routers.certificaciones import router as certificaciones_router
+from app.routers.certificados import router as certificados_router
 from app.routers.picicultura import router as picicultura_router
 from app.routers.suelos import router as suelos_router
 from app.routers.sensores import router as sensores_router
@@ -162,6 +163,7 @@ app.include_router(mensajeria_router)
 app.include_router(farmacia_router)
 app.include_router(bioseguridad_router)
 app.include_router(certificaciones_router)
+app.include_router(certificados_router)
 app.include_router(agua_router)
 app.include_router(alimentacion_router)
 app.include_router(picicultura_router)
