@@ -8,6 +8,7 @@ import { notifications } from '@mantine/notifications'
 import { IconPlus, IconAlertTriangle, IconSearch, IconEdit, IconTrash, IconCurrencyDollar } from '@tabler/icons-react'
 import api from '../services/api.js'
 import { formatNumber, formatCOP } from '../config.js'
+import MobileTable from '../components/MobileTable.jsx'
 
 export default function Inventario() {
   const [inventario, setInventario] = useState([])
@@ -204,90 +205,38 @@ export default function Inventario() {
         </Tabs.List>
 
         <Tabs.Panel value="stock" pt="md">
-          <Table striped highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Insumo</Table.Th>
-                <Table.Th>Lote</Table.Th>
-                <Table.Th>Cantidad</Table.Th>
-                <Table.Th>Stock</Table.Th>
-                <Table.Th>Costo U.</Table.Th>
-                <Table.Th>Vencimiento</Table.Th>
-                <Table.Th>Ubicación</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {filteredInventario.map((i) => {
-                const insumo = insumos.find(s => s.id === i.insumo_id)
-                const ff = new Date(i.fecha_vencimiento || '')
-                const diff = i.fecha_vencimiento ? Math.floor((ff - hoy) / (1000*60*60*24)) : null
-                return (
-                  <Table.Tr key={i.id}>
-                    <Table.Td fw={500}>{insumo?.nombre || '-'}</Table.Td>
-                    <Table.Td>{i.lote_almacen || '-'}</Table.Td>
-                    <Table.Td>{formatNumber(i.cantidad)}</Table.Td>
-                    <Table.Td>{getStockBadge(i.cantidad, insumo?.stock_minimo)}</Table.Td>
-                    <Table.Td>{i.costo_unitario ? formatCOP(i.costo_unitario) : '-'}</Table.Td>
-                    <Table.Td>
-                      <Badge color={diff !== null && diff <= 30 ? (diff <= 7 ? 'red' : 'orange') : 'gray'} size="sm">
-                        {i.fecha_vencimiento || '-'}
-                      </Badge>
-                    </Table.Td>
-                    <Table.Td>{i.ubicacion || '-'}</Table.Td>
-                  </Table.Tr>
-                )
-              })}
-              {filteredInventario.length === 0 && <Table.Tr><Table.Td colSpan={7}><Text c="dimmed" ta="center">Sin stock</Text></Table.Td></Table.Tr>}
-            </Table.Tbody>
-          </Table>
+          <MobileTable
+            columns={[
+              { key: 'insumo', label: 'Insumo', render: i => { const ins = insumos.find(s => s.id === i.insumo_id); return <Text fw={500}>{ins?.nombre || '-'}</Text> } },
+              { key: 'lote', label: 'Lote', render: i => i.lote_almacen || '-', hideOnMobile: true },
+              { key: 'cantidad', label: 'Cantidad', render: i => formatNumber(i.cantidad) },
+              { key: 'stock', label: 'Stock', render: i => { const ins = insumos.find(s => s.id === i.insumo_id); return getStockBadge(i.cantidad, ins?.stock_minimo) } },
+              { key: 'costo', label: 'Costo U.', render: i => i.costo_unitario ? formatCOP(i.costo_unitario) : '-', hideOnMobile: true },
+              { key: 'vencimiento', label: 'Vencimiento', render: i => { const ff = new Date(i.fecha_vencimiento || ''); const diff = i.fecha_vencimiento ? Math.floor((ff - hoy) / (1000*60*60*24)) : null; return <Badge color={diff !== null && diff <= 30 ? (diff <= 7 ? 'red' : 'orange') : 'gray'} size="sm">{i.fecha_vencimiento || '-'}</Badge> } },
+              { key: 'ubicacion', label: 'Ubicación', render: i => i.ubicacion || '-', hideOnMobile: true },
+            ]}
+            data={filteredInventario}
+          />
         </Tabs.Panel>
 
         <Tabs.Panel value="insumos" pt="md">
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Código</Table.Th>
-                <Table.Th>Nombre</Table.Th>
-                <Table.Th>Tipo</Table.Th>
-                <Table.Th>Unidad</Table.Th>
-                <Table.Th>Stock Mín</Table.Th>
-                <Table.Th>Estado</Table.Th>
-                <Table.Th style={{ width: 80 }}>Acciones</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {insumos.map((i) => (
-                <Table.Tr key={i.id}>
-                  <Table.Td>{i.codigo}</Table.Td>
-                  <Table.Td>{i.nombre}</Table.Td>
-                  <Table.Td><Badge size="sm">{i.tipo || 'general'}</Badge></Table.Td>
-                  <Table.Td>{i.unidad_medida}</Table.Td>
-                  <Table.Td>{i.stock_minimo ? formatNumber(i.stock_minimo) : '-'}</Table.Td>
-                  <Table.Td>{getStockBadge(i.stock_actual || 0, i.stock_minimo)}</Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon variant="light" color="blue" size="sm" onClick={() => {
-                        setEditInsumo({
-                          id: i.id,
-                          nombre: i.nombre || '',
-                          tipo: i.tipo || '',
-                          unidad_medida: i.unidad_medida || '',
-                          stock_minimo: i.stock_minimo || 0,
-                        })
-                        openEditInsumo()
-                      }}>
-                        <IconEdit size={14} />
-                      </ActionIcon>
-                      <ActionIcon variant="light" color="red" size="sm" onClick={() => setDeleteConfirm(i.id)}>
-                        <IconTrash size={14} />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-              {insumos.length === 0 && <Table.Tr><Table.Td colSpan={7}><Text c="dimmed" ta="center">Sin insumos registrados</Text></Table.Td></Table.Tr>}
-            </Table.Tbody>
-          </Table>
+          <MobileTable
+            columns={[
+              { key: 'codigo', label: 'Código', render: i => i.codigo },
+              { key: 'nombre', label: 'Nombre', render: i => i.nombre },
+              { key: 'tipo', label: 'Tipo', render: i => <Badge size="sm">{i.tipo || 'general'}</Badge>, hideOnMobile: true },
+              { key: 'unidad', label: 'Unidad', render: i => i.unidad_medida, hideOnMobile: true },
+              { key: 'stock_min', label: 'Stock Mín', render: i => i.stock_minimo ? formatNumber(i.stock_minimo) : '-', hideOnMobile: true },
+              { key: 'estado', label: 'Estado', render: i => getStockBadge(i.stock_actual || 0, i.stock_minimo) },
+              { key: 'acciones', label: 'Acciones', render: i => (
+                <Group gap="xs">
+                  <ActionIcon variant="light" color="blue" size="sm" onClick={(e) => { e?.stopPropagation?.(); setEditInsumo({ id: i.id, nombre: i.nombre || '', tipo: i.tipo || '', unidad_medida: i.unidad_medida || '', stock_minimo: i.stock_minimo || 0 }); openEditInsumo() }}><IconEdit size={14} /></ActionIcon>
+                  <ActionIcon variant="light" color="red" size="sm" onClick={(e) => { e?.stopPropagation?.(); setDeleteConfirm(i.id) }}><IconTrash size={14} /></ActionIcon>
+                </Group>
+              )},
+            ]}
+            data={insumos}
+          />
         </Tabs.Panel>
 
         <Tabs.Panel value="consumos" pt="md">
@@ -301,79 +250,34 @@ export default function Inventario() {
             <Button leftSection={<IconPlus size={16} />} onClick={openConsumo}>Registrar Consumo</Button>
           </Group>
 
-          <Table striped highlightOnHover>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Fecha</Table.Th>
-                <Table.Th>Insumo</Table.Th>
-                <Table.Th>Cantidad</Table.Th>
-                <Table.Th>Tipo Consumo</Table.Th>
-                <Table.Th>Referencia</Table.Th>
-                <Table.Th>Responsable</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {consumos.map((c) => {
-                const insumo = insumos.find(s => s.id === c.insumo_id)
-                let referencia = '-'
-                if (c.tipo_consumo === 'animal' && c.animal_id) referencia = `Animal #${c.animal_id}`
-                else if (c.tipo_consumo === 'cultivo' && c.siembra_id) referencia = `Siembra #${c.siembra_id}`
-                else if (c.tipo_consumo === 'lote' && c.lote_id) referencia = `Lote #${c.lote_id}`
-                return (
-                  <Table.Tr key={c.id}>
-                    <Table.Td>{c.fecha}</Table.Td>
-                    <Table.Td>{insumo?.nombre || '-'}</Table.Td>
-                    <Table.Td>{formatNumber(c.cantidad)}</Table.Td>
-                    <Table.Td><Badge size="sm">{c.tipo_consumo || '-'}</Badge></Table.Td>
-                    <Table.Td>{referencia}</Table.Td>
-                    <Table.Td>{c.responsable || '-'}</Table.Td>
-                  </Table.Tr>
-                )
-              })}
-              {consumos.length === 0 && <Table.Tr><Table.Td colSpan={6}><Text c="dimmed" ta="center">Sin consumos registrados</Text></Table.Td></Table.Tr>}
-            </Table.Tbody>
-          </Table>
+          <MobileTable
+            columns={[
+              { key: 'fecha', label: 'Fecha', render: c => c.fecha },
+              { key: 'insumo', label: 'Insumo', render: c => { const ins = insumos.find(s => s.id === c.insumo_id); return ins?.nombre || '-' } },
+              { key: 'cantidad', label: 'Cantidad', render: c => formatNumber(c.cantidad) },
+              { key: 'tipo', label: 'Tipo Consumo', render: c => <Badge size="sm">{c.tipo_consumo || '-'}</Badge> },
+              { key: 'referencia', label: 'Referencia', render: c => { if (c.tipo_consumo === 'animal' && c.animal_id) return `Animal #${c.animal_id}`; if (c.tipo_consumo === 'cultivo' && c.siembra_id) return `Siembra #${c.siembra_id}`; if (c.tipo_consumo === 'lote' && c.lote_id) return `Lote #${c.lote_id}`; return '-'; }, hideOnMobile: true },
+              { key: 'responsable', label: 'Responsable', render: c => c.responsable || '-', hideOnMobile: true },
+            ]}
+            data={consumos}
+          />
         </Tabs.Panel>
 
         <Tabs.Panel value="produccion" pt="md">
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Fecha</Table.Th>
-                <Table.Th>Producto</Table.Th>
-                <Table.Th>Cantidad</Table.Th>
-                <Table.Th style={{ width: 120 }}>Acciones</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {produccion.map((p) => (
-                <Table.Tr key={p.id}>
-                  <Table.Td>{p.fecha}</Table.Td>
-                  <Table.Td>{p.producto}</Table.Td>
-                  <Table.Td>{formatNumber(p.cantidad)}</Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon variant="light" color="blue" size="sm" onClick={() => {
-                        setEditProd({
-                          id: p.id,
-                          fecha: p.fecha || '',
-                          cantidad: p.cantidad || '',
-                          observaciones: p.observaciones || '',
-                        })
-                        openEditProd()
-                      }}>
-                        <IconEdit size={14} />
-                      </ActionIcon>
-                      <ActionIcon variant="light" color="red" size="sm" onClick={() => handleDeleteProd(p.id)}>
-                        <IconTrash size={14} />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-              {produccion.length === 0 && <Table.Tr><Table.Td colSpan={4}><Text c="dimmed" ta="center">Sin registros de producción</Text></Table.Td></Table.Tr>}
-            </Table.Tbody>
-          </Table>
+          <MobileTable
+            columns={[
+              { key: 'fecha', label: 'Fecha', render: p => p.fecha },
+              { key: 'producto', label: 'Producto', render: p => p.producto },
+              { key: 'cantidad', label: 'Cantidad', render: p => formatNumber(p.cantidad) },
+              { key: 'acciones', label: 'Acciones', render: p => (
+                <Group gap="xs">
+                  <ActionIcon variant="light" color="blue" size="sm" onClick={(e) => { e?.stopPropagation?.(); setEditProd({ id: p.id, fecha: p.fecha || '', cantidad: p.cantidad || '', observaciones: p.observaciones || '' }); openEditProd() }}><IconEdit size={14} /></ActionIcon>
+                  <ActionIcon variant="light" color="red" size="sm" onClick={(e) => { e?.stopPropagation?.(); handleDeleteProd(p.id) }}><IconTrash size={14} /></ActionIcon>
+                </Group>
+              )},
+            ]}
+            data={produccion}
+          />
         </Tabs.Panel>
       </Tabs>
 

@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   AppShell, Group, Text, NavLink, Burger, Box, Select as MantineSelect,
-  useMantineTheme, Avatar, Menu, Badge, ActionIcon,
+  useMantineTheme, Avatar, Menu, Badge, ActionIcon, Paper,
 } from '@mantine/core'
 import { useDisclosure, useMediaQuery } from '@mantine/hooks'
+import { useMobile } from '../hooks/useMobile.js'
 import {
   IconDashboard, IconPig, IconPlant, IconMap, IconCoin,
   IconPackage, IconChartBar, IconLogout, IconUser, IconSettings,
@@ -13,6 +14,7 @@ import {
   IconBuildingEstate, IconCheck, IconReportAnalytics, IconFileSpreadsheet,
   IconSearch, IconAlertTriangle, IconMail, IconMedicineSyrup, IconTractor,
   IconShield, IconCertificate, IconDroplet, IconApple, IconQrcode, IconFish,
+  IconStethoscope, IconBulldozer, IconDeviceSdCard, IconTree,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import { useModo } from '../store/ModoContext.jsx'
@@ -40,6 +42,9 @@ const NAV_ITEMS = [
   { label: 'Agua', icon: IconDroplet, to: '/agua', section: 'core' },
   { label: 'Alimentación', icon: IconApple, to: '/alimentacion', section: 'core' },
   { label: 'Picicultura', icon: IconFish, to: '/picicultura', section: 'core' },
+  { label: 'Suelos/Análisis', icon: IconBulldozer, to: '/suelos', section: 'core' },
+  { label: 'Sensores', icon: IconDeviceSdCard, to: '/sensores', section: 'core' },
+  { label: 'Forestal', icon: IconTree, to: '/forestal', section: 'core' },
   { label: 'Especies', icon: IconPlant, to: '/especies', section: 'especies' },
   { label: 'Consolidado', icon: IconReportAnalytics, to: '/consolidado', section: 'gestion' },
   { label: 'Contabilidad', icon: IconCoin, to: '/contabilidad', section: 'gestion' },
@@ -49,6 +54,7 @@ const NAV_ITEMS = [
   { label: 'Mensajería', icon: IconMail, to: '/mensajeria', section: 'gestion' },
   { label: 'SST', icon: IconHealthRecognition, to: '/sst', section: 'gestion' },
   { label: 'Bioseguridad', icon: IconShield, to: '/bioseguridad', section: 'gestion' },
+  { label: 'Procedimientos Vet', icon: IconStethoscope, to: '/procedimientos-veterinarios', section: 'gestion' },
   { label: 'Certificaciones', icon: IconCertificate, to: '/certificaciones', section: 'gestion' },
   { label: 'Trazabilidad', icon: IconSearch, to: '/trazabilidad', section: 'gestion' },
   { label: 'Estadísticas', icon: IconChartBar, to: '/estadisticas', section: 'analisis' },
@@ -112,11 +118,15 @@ const ROUTE_NAMES = {
   '/agua': 'Agua',
   '/alimentacion': 'Alimentación',
   '/picicultura': 'Picicultura',
+  '/procedimientos-veterinarios': 'Procedimientos Veterinarios',
   '/inicio-propietario': 'Panel Propietario',
   '/inicio-capataz': 'Panel Capataz',
   '/inicio-veterinario': 'Panel Veterinario',
   '/inicio-contador': 'Panel Contador',
   '/inicio-asistente': 'Panel Asistente',
+  '/suelos': 'Suelos/Análisis',
+  '/sensores': 'Sensores',
+  '/forestal': 'Forestal',
 }
 
 export default function Layout() {
@@ -130,9 +140,28 @@ export default function Layout() {
   const [fincaActiva, setFincaActiva] = useState(() => localStorage.getItem('agrop_finca_id') || '')
   const [fincaDetails, setFincaDetails] = useState(null)
   const isMobile = useMediaQuery('(max-width: 768px)')
+  const isMobileHook = useMobile()
 
   const [qrScannerOpened, setQrScannerOpened] = useState(false)
   const { modoSencillo, toggleModoSencillo } = useModo()
+  const touchStartX = useRef(0)
+
+  useEffect(() => {
+    if (!isMobileHook) return
+    const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX }
+    const handleTouchEnd = (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX.current
+      if (dx > 80 && location.pathname !== '/') {
+        navigate(-1)
+      }
+    }
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchend', handleTouchEnd, { passive: true })
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [isMobileHook, location.pathname, navigate])
   const effectiveRole = activeRole || role || 'admin'
   const allowedRoutes = ROLE_NAV_ACCESS[effectiveRole] || ROLE_NAV_ACCESS.admin
 
@@ -359,8 +388,49 @@ export default function Layout() {
         <Box hiddenFrom="xs" mb="xs">
           <Breadcrumbs items={getBreadcrumbItems()} />
         </Box>
-        <Outlet />
+        <Box pb={isMobileHook ? 70 : 0}>
+          <Outlet />
+        </Box>
       </AppShell.Main>
+
+      {isMobileHook && (
+        <Paper
+          withBorder
+          style={{
+            position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
+            backgroundColor: 'white',
+          }}
+          radius={0}
+        >
+          <Group justify="space-around" gap={0} py={4}>
+            {[
+              { icon: IconDashboard, label: 'Inicio', to: '/' },
+              { icon: IconPig, label: 'Animales', to: '/animales' },
+              { icon: IconPlant, label: 'Cultivos', to: '/cultivos' },
+              { icon: IconMap, label: 'Lotes', to: '/lotes' },
+              { icon: IconStethoscope, label: 'Vet', to: '/procedimientos-veterinarios' },
+            ].map(item => {
+              const active = location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to))
+              return (
+                <Box
+                  key={item.to}
+                  onClick={() => { navigate(item.to); if (opened) toggle() }}
+                  style={{
+                    cursor: 'pointer', textAlign: 'center', padding: '4px 8px',
+                    minWidth: 56, minHeight: 44, display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', borderRadius: 8,
+                    backgroundColor: active ? 'var(--mantine-color-green-0)' : 'transparent',
+                  }}
+                >
+                  <item.icon size={22} color={active ? 'var(--mantine-color-green-7)' : 'var(--mantine-color-gray-6)'} stroke={active ? 2 : 1.5} />
+                  <Text size="10px" fw={active ? 600 : 400} c={active ? 'green.7' : 'dimmed'}>{item.label}</Text>
+                </Box>
+              )
+            })}
+          </Group>
+        </Paper>
+      )}
+
       {modoSencillo && <ModoSencillo />}
       <QRScanner opened={qrScannerOpened} onClose={() => setQrScannerOpened(false)} />
       <HelpButton />

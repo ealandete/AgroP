@@ -15,6 +15,7 @@ import {
 import dayjs from 'dayjs'
 import api from '../services/api.js'
 import { formatNumber, TIPOS_CULTIVO } from '../config.js'
+import MobileTable from '../components/MobileTable.jsx'
 
 const ESTADO_COLOR = { activo: 'green', cosechado: 'blue', perdido: 'red', planificado: 'yellow' }
 const METODOS_SIEMBRA = ['directa', 'trasplante', 'voleo', 'surcos']
@@ -352,93 +353,31 @@ export default function Cultivos() {
         </Group>
       </Paper>
 
-      <Paper withBorder style={{ overflowX: 'auto' }}>
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Fecha Siembra</Table.Th>
-              <Table.Th>Cultivo</Table.Th>
-              <Table.Th visibleFrom="sm">Variedad</Table.Th>
-              <Table.Th>Lote</Table.Th>
-              <Table.Th>Área (ha)</Table.Th>
-              <Table.Th>Estado</Table.Th>
-              <Table.Th visibleFrom="sm">Días</Table.Th>
-              <Table.Th visibleFrom="sm">Act.</Table.Th>
-              <Table.Th>Acciones</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {filtered.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={9}>
-                  <Text c="dimmed" ta="center" py="sm">No hay siembras registradas</Text>
-                </Table.Td>
-              </Table.Tr>
-            ) : (
-              filtered.map((s) => (
-                <Table.Tr key={s.id}>
-                  <Table.Td>{s.fecha_siembra}</Table.Td>
-                  <Table.Td fw={500} tt="capitalize">{s.cultivo}</Table.Td>
-                  <Table.Td visibleFrom="sm">{variedades.find(v => v.id === s.variedad_id)?.variedad || '-'}</Table.Td>
-                  <Table.Td>{loteNombre(s.lote_id)}</Table.Td>
-                  <Table.Td>{s.area_ha}</Table.Td>
-                  <Table.Td>
-                    <Badge color={ESTADO_COLOR[s.estado] || 'gray'} variant="light">
-                      {s.estado}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td visibleFrom="sm">
-                    <Text size="sm" c={dayjs().diff(dayjs(s.fecha_siembra), 'day') > 365 ? 'red' : 'dimmed'}>
-                      {diasDesdeSiembra(s.fecha_siembra)}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td visibleFrom="sm">
-                    <Badge size="sm" variant="light" color="teal">
-                      {actividadesCount[s.id] || 0}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap={4} wrap="nowrap">
-                      <Tooltip label="Editar">
-                        <ActionIcon variant="light" color="blue" size="sm" onClick={() => handleEditSiembra(s)}>
-                          <IconEdit size={14} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip label="Ver detalle">
-                        <ActionIcon variant="light" color="teal" size="sm" onClick={() => navigate(`/cultivos/ficha?id=${s.id}`)}>
-                          <IconEye size={14} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip label="Registrar cosecha">
-                        <ActionIcon variant="light" color="green" size="sm" onClick={() => handleOpenCosecha(s)}>
-                          <IconArrowBack size={14} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip label="Crear actividad">
-                        <ActionIcon variant="light" color="violet" size="sm" onClick={() => handleCrearActividad(s)}>
-                          <IconCalendarEvent size={14} />
-                        </ActionIcon>
-                      </Tooltip>
-                      {s.estado === 'activo' && (
-                        <Tooltip label="Marcar como perdido">
-                          <ActionIcon variant="light" color="orange" size="sm" onClick={() => handleOpenPerder(s.id)}>
-                            <IconAlertTriangle size={14} />
-                          </ActionIcon>
-                        </Tooltip>
-                      )}
-                      <Tooltip label="Eliminar">
-                        <ActionIcon variant="light" color="red" size="sm" onClick={() => handleOpenEliminar(s.id)}>
-                          <IconTrash size={14} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))
-            )}
-          </Table.Tbody>
-        </Table>
-      </Paper>
+      <MobileTable
+        columns={[
+          { key: 'fecha', label: 'Fecha Siembra', render: s => s.fecha_siembra },
+          { key: 'cultivo', label: 'Cultivo', render: s => <Text span fw={500} tt="capitalize">{s.cultivo}</Text> },
+          { key: 'variedad', label: 'Variedad', render: s => variedades.find(v => v.id === s.variedad_id)?.variedad || '-', hideOnMobile: true },
+          { key: 'lote', label: 'Lote', render: s => loteNombre(s.lote_id) },
+          { key: 'area', label: 'Área (ha)', render: s => s.area_ha, hideOnMobile: true },
+          { key: 'estado', label: 'Estado', render: s => <Badge color={ESTADO_COLOR[s.estado] || 'gray'} variant="light">{s.estado}</Badge> },
+          { key: 'dias', label: 'Días', render: s => <Text size="sm" c={dayjs().diff(dayjs(s.fecha_siembra), 'day') > 365 ? 'red' : 'dimmed'}>{diasDesdeSiembra(s.fecha_siembra)}</Text>, hideOnMobile: true },
+          { key: 'act', label: 'Act.', render: s => <Badge size="sm" variant="light" color="teal">{actividadesCount[s.id] || 0}</Badge>, hideOnMobile: true },
+          { key: 'acciones', label: 'Acciones', render: s => (
+            <Group gap={4} wrap="nowrap">
+              <Tooltip label="Editar"><ActionIcon variant="light" color="blue" size="sm" onClick={(e) => { e?.stopPropagation?.(); handleEditSiembra(s) }}><IconEdit size={14} /></ActionIcon></Tooltip>
+              <Tooltip label="Ver detalle"><ActionIcon variant="light" color="teal" size="sm" onClick={(e) => { e?.stopPropagation?.(); navigate(`/cultivos/ficha?id=${s.id}`) }}><IconEye size={14} /></ActionIcon></Tooltip>
+              <Tooltip label="Registrar cosecha"><ActionIcon variant="light" color="green" size="sm" onClick={(e) => { e?.stopPropagation?.(); handleOpenCosecha(s) }}><IconArrowBack size={14} /></ActionIcon></Tooltip>
+              <Tooltip label="Crear actividad"><ActionIcon variant="light" color="violet" size="sm" onClick={(e) => { e?.stopPropagation?.(); handleCrearActividad(s) }}><IconCalendarEvent size={14} /></ActionIcon></Tooltip>
+              {s.estado === 'activo' && (
+                <Tooltip label="Marcar como perdido"><ActionIcon variant="light" color="orange" size="sm" onClick={(e) => { e?.stopPropagation?.(); handleOpenPerder(s.id) }}><IconAlertTriangle size={14} /></ActionIcon></Tooltip>
+              )}
+              <Tooltip label="Eliminar"><ActionIcon variant="light" color="red" size="sm" onClick={(e) => { e?.stopPropagation?.(); handleOpenEliminar(s.id) }}><IconTrash size={14} /></ActionIcon></Tooltip>
+            </Group>
+          )},
+        ]}
+        data={filtered}
+      />
 
       <Modal opened={nuevaOpened} onClose={closeNueva} title="Nueva Siembra" size="lg">
         <SimpleGrid cols={{ base: 1, sm: 2 }}>

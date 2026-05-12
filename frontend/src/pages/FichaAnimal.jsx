@@ -12,7 +12,7 @@ import {
   IconStethoscope, IconWeight, IconHeart,
   IconDroplet, IconTruck, IconCalendar, IconPaw,
   IconDeviceFloppy, IconArrowLeft, IconUpload, IconDownload, IconFile,
-  IconQrcode, IconScan,
+  IconQrcode, IconScan, IconHistory, IconStethoscope as IconVetStethoscope,
 } from '@tabler/icons-react'
 import QRGenerator from '../components/QRGenerator.jsx'
 import QRScanner from '../components/QRScanner.jsx'
@@ -468,6 +468,7 @@ export default function FichaAnimal() {
           )}
           <Tabs.Tab value="movimientos" leftSection={<IconTruck size={16} />}>Movimientos</Tabs.Tab>
           <Tabs.Tab value="eventos" leftSection={<IconCalendar size={16} />}>Eventos</Tabs.Tab>
+          <Tabs.Tab value="procedimientos" leftSection={<IconVetStethoscope size={16} />}>Procedimientos</Tabs.Tab>
           <Tabs.Tab value="archivos" leftSection={<IconFile size={16} />}>Archivos</Tabs.Tab>
         </Tabs.List>
 
@@ -830,6 +831,23 @@ export default function FichaAnimal() {
               </Table.Tbody>
             </Table>
           </Paper>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="procedimientos" pt="md">
+          <Stack align="center" py="xl" gap="md">
+            <IconVetStethoscope size={48} color="var(--mantine-color-green-6)" />
+            <Text ta="center" size="lg" fw={500}>Procedimientos Veterinarios</Text>
+            <Text ta="center" size="sm" c="dimmed">
+              Acceda al módulo de procedimientos para ver el historial completo de este animal.
+            </Text>
+            <Button
+              size="lg"
+              leftSection={<IconHistory size={20} />}
+              onClick={() => navigate(`/procedimientos-veterinarios?animal_id=${animalId}`)}
+            >
+              Ver Historial de Procedimientos
+            </Button>
+          </Stack>
         </Tabs.Panel>
       </Tabs>
 

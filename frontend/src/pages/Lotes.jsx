@@ -17,6 +17,8 @@ import {
 import { MapContainer, TileLayer, Polygon, Popup, useMap, CircleMarker } from 'react-leaflet'
 import api from '../services/api.js'
 import { formatNumber } from '../config.js'
+import CoordinatePicker from '../components/CoordinatePicker.jsx'
+import MobileTable from '../components/MobileTable.jsx'
 
 const SUELOS = ['franco', 'arcilloso', 'arenoso', 'limoso']
 const USOS = ['cultivo', 'pastoreo', 'bosque', 'descanso', 'construccion']
@@ -388,8 +390,11 @@ function LotForm({ form, setForm, onSave, onCancel, saving, isNew, onStartDrawin
           <Select label="Sistema Riego" data={RIEGOS} value={form.sistema_riego} onChange={v => set('sistema_riego', v)} />
           <TextInput label="Fuente de Agua" value={form.fuente_agua || ''} onChange={e => set('fuente_agua', e.target.value)} />
           <NumberInput label="Caudal (lps)" value={form.caudal_lps || ''} onChange={v => set('caudal_lps', v)} />
-          <TextInput label="Latitud" value={form.latitud} onChange={e => set('latitud', e.target.value)} />
-          <TextInput label="Longitud" value={form.longitud} onChange={e => set('longitud', e.target.value)} />
+          <CoordinatePicker
+            value={{ lat: parseFloat(form.latitud), lng: parseFloat(form.longitud) }}
+            onChange={(coords) => { set('latitud', coords.lat.toString()); set('longitud', coords.lng.toString()) }}
+            label="Coordenadas (GPS)"
+          />
           <Select label="Color" data={COLORES} value={form.color} onChange={v => set('color', v)} />
           {isNew && (
             <TextInput label="Finca ID" value={form.finca_id} onChange={e => setAndValidate('finca_id', parseInt(e.target.value) || '')} required error={errors.finca_id} />
@@ -658,89 +663,28 @@ export default function Lotes() {
               />
             </Group>
 
-            <Paper withBorder style={{ flex: 1 }}>
-              <ScrollArea h={500}>
-                {filtered.length === 0 ? (
-                  <Text size="sm" c="dimmed" ta="center" py="xl">
-                    {search || usoFiltro ? 'Sin resultados' : 'No hay lotes registrados'}
-                  </Text>
-                ) : (
-                  <div style={{ overflowX: 'auto' }}>
-                    <Table>
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th>Nombre</Table.Th>
-                          <Table.Th visibleFrom="sm">Código</Table.Th>
-                          <Table.Th>Área</Table.Th>
-                          <Table.Th visibleFrom="sm">Uso Actual</Table.Th>
-                          <Table.Th visibleFrom="sm">Cultivos</Table.Th>
-                          <Table.Th>Polígono</Table.Th>
-                          <Table.Th>Acciones</Table.Th>
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
-                        {filtered.map(l => (
-                          <Table.Tr
-                            key={l.id}
-                            style={{ cursor: 'pointer' }}
-                            bg={selectedLote?.id === l.id ? 'green.0' : undefined}
-                            onClick={() => handleSelect(l)}
-                          >
-                            <Table.Td><Text size="sm" fw={500}>{l.nombre}</Text></Table.Td>
-                            <Table.Td visibleFrom="sm"><Text size="sm">{l.codigo || '—'}</Text></Table.Td>
-                            <Table.Td>
-                              <Text size="sm">{l.area_ha != null ? `${formatNumber(l.area_ha)} ha` : '—'}</Text>
-                            </Table.Td>
-                            <Table.Td visibleFrom="sm">
-                              <Badge size="sm" variant="light" color={USO_COLORS[l.uso_actual] || 'gray'}>
-                                {l.uso_actual || '—'}
-                              </Badge>
-                            </Table.Td>
-                            <Table.Td visibleFrom="sm"><Text size="sm">{cultivoCounts[l.id] || 0}</Text></Table.Td>
-                            <Table.Td>
-                              {l.coordenadas?.type === 'Polygon' ? (
-                                <IconCheck size={16} color="green" />
-                              ) : (
-                                <IconX size={16} color="red" />
-                              )}
-                            </Table.Td>
-                            <Table.Td>
-                              <Group gap={4} wrap="nowrap">
-                                <Tooltip label="Editar">
-                                  <ActionIcon
-                                    variant="light" color="blue" size="sm"
-                                    onClick={e => { e.stopPropagation(); handleEdit(l) }}
-                                  >
-                                    <IconEdit size={14} />
-                                  </ActionIcon>
-                                </Tooltip>
-                                <Tooltip label="Ver en mapa">
-                                  <ActionIcon
-                                    variant="light" color="green" size="sm"
-                                    onClick={e => { e.stopPropagation(); handleViewOnMap(l) }}
-                                  >
-                                    <IconEye size={14} />
-                                  </ActionIcon>
-                                </Tooltip>
-                                {l.coordenadas?.type === 'Polygon' && (
-                                  <Tooltip label="Editar polígono">
-                                    <ActionIcon
-                                      variant="light" color="orange" size="sm"
-                                      onClick={e => { e.stopPropagation(); handleStartEditPolygon(l) }}
-                                    >
-                                      <IconEditCircle size={14} />
-                                    </ActionIcon>
-                                  </Tooltip>
-                                )}
-                              </Group>
-                            </Table.Td>
-                          </Table.Tr>
-                        ))}
-                      </Table.Tbody>
-                    </Table>
-                  </div>
-                )}
-              </ScrollArea>
+            <Paper withBorder style={{ flex: 1, overflow: 'auto' }}>
+              <MobileTable
+                columns={[
+                  { key: 'nombre', label: 'Nombre', render: l => <Text size="sm" fw={500}>{l.nombre}</Text> },
+                  { key: 'codigo', label: 'Código', render: l => l.codigo || '—', hideOnMobile: true },
+                  { key: 'area', label: 'Área', render: l => l.area_ha != null ? `${formatNumber(l.area_ha)} ha` : '—' },
+                  { key: 'uso', label: 'Uso Actual', render: l => <Badge size="sm" variant="light" color={USO_COLORS[l.uso_actual] || 'gray'}>{l.uso_actual || '—'}</Badge>, hideOnMobile: true },
+                  { key: 'cultivos', label: 'Cultivos', render: l => cultivoCounts[l.id] || 0, hideOnMobile: true },
+                  { key: 'poligono', label: 'Polígono', render: l => l.coordenadas?.type === 'Polygon' ? <IconCheck size={16} color="green" /> : <IconX size={16} color="red" /> },
+                  { key: 'acciones', label: 'Acciones', render: l => (
+                    <Group gap={4} wrap="nowrap">
+                      <Tooltip label="Editar"><ActionIcon variant="light" color="blue" size="sm" onClick={e => { e?.stopPropagation?.(); handleEdit(l) }}><IconEdit size={14} /></ActionIcon></Tooltip>
+                      <Tooltip label="Ver en mapa"><ActionIcon variant="light" color="green" size="sm" onClick={e => { e?.stopPropagation?.(); handleViewOnMap(l) }}><IconEye size={14} /></ActionIcon></Tooltip>
+                      {l.coordenadas?.type === 'Polygon' && (
+                        <Tooltip label="Editar polígono"><ActionIcon variant="light" color="orange" size="sm" onClick={e => { e?.stopPropagation?.(); handleStartEditPolygon(l) }}><IconEditCircle size={14} /></ActionIcon></Tooltip>
+                      )}
+                    </Group>
+                  )},
+                ]}
+                data={filtered}
+                onRowClick={(l) => { handleSelect(l); handleViewOnMap(l) }}
+              />
             </Paper>
           </Stack>
         </Grid.Col>

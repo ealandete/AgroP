@@ -7,6 +7,7 @@ import { IconPlus, IconEdit, IconSearch, IconStethoscope, IconFileDescription, I
 import api from '../services/api.js'
 import { formatCOP, formatNumber } from '../config.js'
 import { useSelection, BulkActionsHeader, BulkCheckbox } from '../components/BulkActions.jsx'
+import MobileTable from '../components/MobileTable.jsx'
 
 const ESPECIES_LIST = ['bovino','bufalino','porcino','aviar','caprino','ovino','equino']
 
@@ -140,42 +141,27 @@ export default function Animales() {
         onAction={handleBulkAction}
       />
 
-      <Paper withBorder style={{ overflowX: 'auto' }}>
-        <Table striped highlightOnHover>
-          <Table.Thead><Table.Tr><Table.Th w={40}><BulkCheckbox id="__all__" isSelected={() => selection.allSelected} toggle={() => selection.allSelected ? selection.deselectAll() : selection.selectAll()} /></Table.Th><Table.Th>Código</Table.Th><Table.Th>Nombre</Table.Th><Table.Th>Especie</Table.Th><Table.Th>Raza</Table.Th><Table.Th>Sexo</Table.Th><Table.Th>Peso</Table.Th><Table.Th>Chapeta</Table.Th><Table.Th>Estado</Table.Th><Table.Th>Origen</Table.Th><Table.Th>Acciones</Table.Th></Table.Tr></Table.Thead>
-          <Table.Tbody>
-            {filtered.map(a => {
-              const grupoNombre = grupos.find(g => g.id === a.grupo_manejo_id)?.nombre || ''
-              return (
-                <Table.Tr key={a.id} bg={selection.isSelected(a.id) ? 'grape.0' : undefined}>
-                  <Table.Td><BulkCheckbox id={a.id} isSelected={selection.isSelected} toggle={selection.toggle} /></Table.Td>
-                  <Table.Td fw={500}>{a.codigo}</Table.Td>
-                  <Table.Td>{a.nombre||'-'}</Table.Td>
-                  <Table.Td>{a.especie}</Table.Td>
-                  <Table.Td>{razas.find(r=>r.id===a.raza_id)?.nombre||'-'}</Table.Td>
-                  <Table.Td><Badge size="sm" color={a.sexo==='H'?'pink':'blue'}>{a.sexo==='H'?'H':'M'}</Badge></Table.Td>
-                  <Table.Td>{a.peso_kg?formatNumber(a.peso_kg):'-'}</Table.Td>
-                  <Table.Td>{a.tiene_chapeta && a.numero_chapeta ? <Badge size="sm" variant="outline">{a.numero_chapeta}</Badge> : '-'}</Table.Td>
-                  <Table.Td><Badge size="sm" color={a.activo?'green':'red'}>{a.activo?'Activo':'Inactivo'}</Badge></Table.Td>
-                  <Table.Td>
-                    {(() => {
-                      const est = ESTADOS_ORIGEN.find(e => e.value === a.estado_origen)
-                      return est ? <Badge size="sm" color={est.color} variant="light">{est.label}</Badge> : <Badge size="sm" color="blue" variant="light">Propio</Badge>
-                    })()}
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap={4}>
-                      <ActionIcon variant="light" color="blue" onClick={() => openEdit(a)}><IconEdit size={16} /></ActionIcon>
-                      <ActionIcon variant="light" color="teal" onClick={() => navigate(`/ficha-animal?id=${a.id}`)}><IconFileDescription size={16} /></ActionIcon>
-                      <ActionIcon variant="light" color="cyan" onClick={() => { setSelected(a); loadEventos(a.id); openEv() }}><IconStethoscope size={16} /></ActionIcon>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              )
-            })}
-          </Table.Tbody>
-        </Table>
-      </Paper>
+      <MobileTable
+        columns={[
+          { key: 'codigo', label: 'Código', render: a => <><BulkCheckbox id={a.id} isSelected={selection.isSelected} toggle={selection.toggle} /> <Text span fw={500}>{a.codigo}</Text></> },
+          { key: 'nombre', label: 'Nombre', render: a => a.nombre || '-', hideOnMobile: true },
+          { key: 'especie', label: 'Especie', render: a => a.especie },
+          { key: 'raza', label: 'Raza', render: a => razas.find(r=>r.id===a.raza_id)?.nombre||'-', hideOnMobile: true },
+          { key: 'sexo', label: 'Sexo', render: a => <Badge size="sm" color={a.sexo==='H'?'pink':'blue'}>{a.sexo==='H'?'H':'M'}</Badge> },
+          { key: 'peso', label: 'Peso', render: a => a.peso_kg?formatNumber(a.peso_kg):'-', hideOnMobile: true },
+          { key: 'chapeta', label: 'Chapeta', render: a => a.tiene_chapeta && a.numero_chapeta ? <Badge size="sm" variant="outline">{a.numero_chapeta}</Badge> : '-', hideOnMobile: true },
+          { key: 'estado', label: 'Estado', render: a => <Badge size="sm" color={a.activo?'green':'red'}>{a.activo?'Activo':'Inactivo'}</Badge> },
+          { key: 'origen', label: 'Origen', render: a => { const est = ESTADOS_ORIGEN.find(e => e.value === a.estado_origen); return est ? <Badge size="sm" color={est.color} variant="light">{est.label}</Badge> : <Badge size="sm" color="blue" variant="light">Propio</Badge> }, hideOnMobile: true },
+          { key: 'acciones', label: 'Acciones', render: a => (
+            <Group gap={4}>
+              <ActionIcon variant="light" color="blue" onClick={(e) => { e?.stopPropagation?.(); openEdit(a) }}><IconEdit size={16} /></ActionIcon>
+              <ActionIcon variant="light" color="teal" onClick={(e) => { e?.stopPropagation?.(); navigate(`/ficha-animal?id=${a.id}`) }}><IconFileDescription size={16} /></ActionIcon>
+              <ActionIcon variant="light" color="cyan" onClick={(e) => { e?.stopPropagation?.(); setSelected(a); loadEventos(a.id); openEv() }}><IconStethoscope size={16} /></ActionIcon>
+            </Group>
+          )},
+        ]}
+        data={filtered}
+      />
 
       <Modal opened={opened} onClose={close} title={editando?'Editar Animal':'Nuevo Animal'} size="lg">
         <SimpleGrid cols={{ base: 1, sm: 2 }}>

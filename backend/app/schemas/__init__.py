@@ -244,24 +244,78 @@ class AnalisisSueloBase(BaseModel):
     lote_id: int
     fecha: date
     ph: Optional[float] = None
-    nitrogeno: Optional[float] = None
-    fosforo: Optional[float] = None
-    potasio: Optional[float] = None
-    materia_organica: Optional[float] = None
-    humedad: Optional[float] = None
+    nitrogeno_ppm: Optional[float] = None
+    fosforo_ppm: Optional[float] = None
+    potasio_ppm: Optional[float] = None
+    materia_organica_pct: Optional[float] = None
+    humedad_pct: Optional[float] = None
     textura: Optional[str] = None
     profundidad_cm: Optional[int] = None
+    conductividad_us_cm: Optional[float] = None
+    densidad_aparente: Optional[float] = None
+    capacidad_campo: Optional[float] = None
+    punto_marchitez: Optional[float] = None
+    cice: Optional[float] = None
+    porcentaje_saturacion_bases: Optional[float] = None
+    calcio_meq: Optional[float] = None
+    magnesio_meq: Optional[float] = None
+    sodio_meq: Optional[float] = None
+    potasio_meq: Optional[float] = None
+    aluminio_meq: Optional[float] = None
+    hierro_ppm: Optional[float] = None
+    manganeso_ppm: Optional[float] = None
+    zinc_ppm: Optional[float] = None
+    cobre_ppm: Optional[float] = None
+    boro_ppm: Optional[float] = None
     observaciones: Optional[str] = None
+    recomendaciones: Optional[str] = None
+    tecnico_responsable: Optional[str] = None
 
 class AnalisisSueloCreate(AnalisisSueloBase):
     pass
 
+class AnalisisSueloUpdate(BaseModel):
+    fecha: Optional[date] = None
+    ph: Optional[float] = None
+    nitrogeno_ppm: Optional[float] = None
+    fosforo_ppm: Optional[float] = None
+    potasio_ppm: Optional[float] = None
+    materia_organica_pct: Optional[float] = None
+    humedad_pct: Optional[float] = None
+    textura: Optional[str] = None
+    profundidad_cm: Optional[int] = None
+    conductividad_us_cm: Optional[float] = None
+    densidad_aparente: Optional[float] = None
+    capacidad_campo: Optional[float] = None
+    punto_marchitez: Optional[float] = None
+    cice: Optional[float] = None
+    porcentaje_saturacion_bases: Optional[float] = None
+    calcio_meq: Optional[float] = None
+    magnesio_meq: Optional[float] = None
+    sodio_meq: Optional[float] = None
+    potasio_meq: Optional[float] = None
+    aluminio_meq: Optional[float] = None
+    hierro_ppm: Optional[float] = None
+    manganeso_ppm: Optional[float] = None
+    zinc_ppm: Optional[float] = None
+    cobre_ppm: Optional[float] = None
+    boro_ppm: Optional[float] = None
+    observaciones: Optional[str] = None
+    recomendaciones: Optional[str] = None
+    tecnico_responsable: Optional[str] = None
+
 class AnalisisSueloOut(AnalisisSueloBase):
     id: int
+    lote_nombre: Optional[str] = None
     created_at: Optional[datetime]
 
     class Config:
         from_attributes = True
+
+class RecomendacionSuelo(BaseModel):
+    cultivos_recomendados: list[str] = []
+    fertilizacion: list[dict] = []
+    observaciones: list[str] = []
 
 
 class ProductoBase(BaseModel):
@@ -1444,3 +1498,227 @@ class AlertaCertificacionOut(BaseModel):
     fecha_vencimiento: Optional[date]
     dias_restantes: int
     severidad: str
+
+
+# --- Procedimientos Veterinarios ---
+
+class ProcedimientoVeterinarioCreate(BaseModel):
+    animal_id: int
+    fecha: date
+    tipo: str = "exploracion"
+    procedimiento_nombre: str
+    descripcion: Optional[str] = None
+    hallazgos: Optional[str] = None
+    diagnostico: Optional[str] = None
+    anestesia: str = "ninguna"
+    anestesico_usado: Optional[str] = None
+    dosis_anestesia: Optional[str] = None
+    medicamentos_usados: Optional[list] = None
+    materiales: Optional[list] = None
+    veterinario_principal: Optional[str] = None
+    veterinario_asistente: Optional[str] = None
+    duracion_minutos: Optional[int] = None
+    complicaciones: Optional[str] = None
+    resultado: str = "exitoso"
+    costo: Optional[float] = None
+    observaciones: Optional[str] = None
+    seguimiento_recomendado: Optional[str] = None
+
+class ProcedimientoVeterinarioOut(BaseModel):
+    id: int
+    animal_id: int
+    fecha: date
+    tipo: str
+    procedimiento_nombre: str
+    descripcion: Optional[str]
+    hallazgos: Optional[str]
+    diagnostico: Optional[str]
+    anestesia: str
+    anestesico_usado: Optional[str]
+    dosis_anestesia: Optional[str]
+    medicamentos_usados: Optional[list]
+    materiales: Optional[list]
+    veterinario_principal: Optional[str]
+    veterinario_asistente: Optional[str]
+    duracion_minutos: Optional[int]
+    complicaciones: Optional[str]
+    resultado: str
+    costo: Optional[float]
+    observaciones: Optional[str]
+    seguimiento_recomendado: Optional[str]
+    created_at: Optional[datetime]
+    animal_codigo: Optional[str] = None
+    animal_nombre: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class ProcedimientoVeterinarioUpdate(BaseModel):
+    fecha: Optional[date] = None
+    tipo: Optional[str] = None
+    procedimiento_nombre: Optional[str] = None
+    descripcion: Optional[str] = None
+    hallazgos: Optional[str] = None
+    diagnostico: Optional[str] = None
+    anestesia: Optional[str] = None
+    anestesico_usado: Optional[str] = None
+    dosis_anestesia: Optional[str] = None
+    medicamentos_usados: Optional[list] = None
+    materiales: Optional[list] = None
+    veterinario_principal: Optional[str] = None
+    veterinario_asistente: Optional[str] = None
+    duracion_minutos: Optional[int] = None
+    complicaciones: Optional[str] = None
+    resultado: Optional[str] = None
+    costo: Optional[float] = None
+    observaciones: Optional[str] = None
+    seguimiento_recomendado: Optional[str] = None
+
+class ProcedimientoStats(BaseModel):
+    procedimientos_mes: int
+    total_por_tipo: list[dict] = []
+    tasa_exito: float = 0
+    costo_total_mes: float = 0
+    proximos_seguimientos: int = 0
+
+
+# ============================================================
+# SCHEMAS SENSORES / ESTACIONES
+# ============================================================
+
+class SensorBase(BaseModel):
+    finca_id: int
+    lote_id: Optional[int] = None
+    nombre: str
+    tipo: str
+    modelo: Optional[str] = None
+    numero_serie: Optional[str] = None
+    fabricante: Optional[str] = None
+    fecha_instalacion: Optional[date] = None
+    ubicacion_coordenadas: Optional[Any] = None
+    variables_medidas: Optional[Any] = None
+    frecuencia_lectura_min: Optional[int] = None
+    protocolo: Optional[str] = None
+    activo: bool = True
+
+class SensorCreate(SensorBase):
+    pass
+
+class SensorUpdate(BaseModel):
+    nombre: Optional[str] = None
+    lote_id: Optional[int] = None
+    tipo: Optional[str] = None
+    modelo: Optional[str] = None
+    numero_serie: Optional[str] = None
+    fabricante: Optional[str] = None
+    fecha_instalacion: Optional[date] = None
+    ubicacion_coordenadas: Optional[Any] = None
+    variables_medidas: Optional[Any] = None
+    frecuencia_lectura_min: Optional[int] = None
+    protocolo: Optional[str] = None
+    activo: Optional[bool] = None
+
+class SensorOut(SensorBase):
+    id: int
+    ultima_lectura: Optional[dict] = None
+    lote_nombre: Optional[str] = None
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class LecturaSensorBase(BaseModel):
+    fecha: datetime
+    variable: str
+    valor: float
+    unidad: Optional[str] = None
+
+class LecturaSensorCreate(LecturaSensorBase):
+    pass
+
+class LecturaSensorOut(LecturaSensorBase):
+    id: int
+    sensor_id: int
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class SensorResumen(BaseModel):
+    total_sensores: int
+    activos: int
+    estaciones_meteorologicas: int
+    ultimas_lecturas: list[dict] = []
+
+
+# ============================================================
+# SCHEMAS FORESTAL
+# ============================================================
+
+class EspecieForestalBase(BaseModel):
+    nombre_comun: str
+    nombre_cientifico: Optional[str] = None
+    tipo: Optional[str] = None
+    crecimiento_anual_m: Optional[float] = None
+    densidad_madera: Optional[float] = None
+    usos: Optional[str] = None
+
+class EspecieForestalOut(EspecieForestalBase):
+    id: int
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class PlantacionBase(BaseModel):
+    lote_id: int
+    especie_id: Optional[int] = None
+    especie: str
+    fecha_plantacion: date
+    area_ha: Optional[float] = None
+    densidad_arboles_ha: Optional[int] = None
+    total_arboles: Optional[int] = None
+    proposito: str = "comercial"
+    estado: str = "establecimiento"
+
+class PlantacionCreate(PlantacionBase):
+    pass
+
+class PlantacionUpdate(BaseModel):
+    especie_id: Optional[int] = None
+    especie: Optional[str] = None
+    fecha_plantacion: Optional[date] = None
+    area_ha: Optional[float] = None
+    densidad_arboles_ha: Optional[int] = None
+    total_arboles: Optional[int] = None
+    proposito: Optional[str] = None
+    estado: Optional[str] = None
+
+class PlantacionOut(PlantacionBase):
+    id: int
+    lote_nombre: Optional[str] = None
+    especie_nombre: Optional[str] = None
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+class CrecimientoForestalBase(BaseModel):
+    fecha: date
+    altura_promedio_m: Optional[float] = None
+    diametro_promedio_cm: Optional[float] = None
+    sobrevivencia_pct: Optional[float] = None
+    observaciones: Optional[str] = None
+
+class CrecimientoForestalCreate(CrecimientoForestalBase):
+    pass
+
+class CrecimientoForestalOut(CrecimientoForestalBase):
+    id: int
+    plantacion_id: int
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True

@@ -28,6 +28,10 @@ from app.routers.alimentacion import router as alimentacion_router
 from app.routers.bioseguridad import router as bioseguridad_router
 from app.routers.certificaciones import router as certificaciones_router
 from app.routers.picicultura import router as picicultura_router
+from app.routers.suelos import router as suelos_router
+from app.routers.sensores import router as sensores_router
+from app.routers.forestal import router as forestal_router
+from app.routers import procedimientos
 
 tags_metadata = [
     {"name": "Autenticacion", "description": "Login, registro, tokens"},
@@ -46,6 +50,10 @@ tags_metadata = [
     {"name": "Agua / Riego", "description": "Fuentes de agua, consumo y calidad"},
     {"name": "Alimentacion", "description": "Alimentos, dietas y consumo diario"},
     {"name": "Picicultura", "description": "Gestion de estanques, cosechas, calidad de agua y alimentacion de peces"},
+    {"name": "Procedimientos Veterinarios", "description": "Registro de procedimientos clinicos y quirurgicos veterinarios"},
+    {"name": "Suelos / Analisis", "description": "Analisis de suelo, recomendaciones de fertilizacion y cultivos"},
+    {"name": "Sensores / Estaciones", "description": "Sensores IoT, estaciones meteorologicas y lecturas"},
+    {"name": "Forestal / Plantaciones", "description": "Plantaciones forestales, crecimiento y monitoreo"},
 ]
 
 app = FastAPI(
@@ -152,6 +160,10 @@ app.include_router(certificaciones_router)
 app.include_router(agua_router)
 app.include_router(alimentacion_router)
 app.include_router(picicultura_router)
+app.include_router(suelos_router)
+app.include_router(sensores_router)
+app.include_router(forestal_router)
+app.include_router(procedimientos.router)
 
 
 @app.get("/api/health")

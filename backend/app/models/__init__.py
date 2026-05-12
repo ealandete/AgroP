@@ -83,14 +83,32 @@ class AnalisisSuelo(Base):
     lote_id = Column(Integer, ForeignKey("lotes.id"), nullable=False)
     fecha = Column(Date, nullable=False)
     ph = Column(DECIMAL(4, 2))
-    nitrogeno = Column(DECIMAL(8, 4))
-    fosforo = Column(DECIMAL(8, 4))
-    potasio = Column(DECIMAL(8, 4))
-    materia_organica = Column(DECIMAL(5, 2))
-    humedad = Column(DECIMAL(5, 2))
+    nitrogeno_ppm = Column("nitrogeno", DECIMAL(8, 4))
+    fosforo_ppm = Column("fosforo", DECIMAL(8, 4))
+    potasio_ppm = Column("potasio", DECIMAL(8, 4))
+    materia_organica_pct = Column("materia_organica", DECIMAL(5, 2))
+    humedad_pct = Column("humedad", DECIMAL(5, 2))
     textura = Column(String(50))
     profundidad_cm = Column(Integer)
-    created_at = Column(DateTime, server_default=func.now())
+    conductividad_us_cm = Column(DECIMAL(8, 2), nullable=True)
+    densidad_aparente = Column(DECIMAL(5, 3), nullable=True)
+    capacidad_campo = Column(DECIMAL(5, 2), nullable=True)
+    punto_marchitez = Column(DECIMAL(5, 2), nullable=True)
+    cice = Column(DECIMAL(8, 2), nullable=True)
+    porcentaje_saturacion_bases = Column(DECIMAL(5, 2), nullable=True)
+    calcio_meq = Column(DECIMAL(8, 2), nullable=True)
+    magnesio_meq = Column(DECIMAL(8, 2), nullable=True)
+    sodio_meq = Column(DECIMAL(8, 2), nullable=True)
+    potasio_meq = Column(DECIMAL(8, 2), nullable=True)
+    aluminio_meq = Column(DECIMAL(8, 2), nullable=True)
+    hierro_ppm = Column(DECIMAL(8, 2), nullable=True)
+    manganeso_ppm = Column(DECIMAL(8, 2), nullable=True)
+    zinc_ppm = Column(DECIMAL(8, 2), nullable=True)
+    cobre_ppm = Column(DECIMAL(8, 2), nullable=True)
+    boro_ppm = Column(DECIMAL(8, 2), nullable=True)
+    observaciones = Column(Text, nullable=True)
+    recomendaciones = Column(Text, nullable=True)
+    tecnico_responsable = Column(String(150), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     lote = relationship("Lote")
@@ -1492,3 +1510,125 @@ class NoConformidad(Base):
     created_at = Column(DateTime, server_default=func.now())
 
     certificacion = relationship("Certificacion")
+
+
+# ============================================================
+# MODELOS SENSORES / ESTACIONES METEOROLOGICAS
+# ============================================================
+
+class Sensor(Base):
+    __tablename__ = "sensores"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    finca_id = Column(Integer, ForeignKey("fincas.id"), nullable=False)
+    lote_id = Column(Integer, ForeignKey("lotes.id"), nullable=True)
+    nombre = Column(String(150), nullable=False)
+    tipo = Column(String(50), nullable=False)
+    modelo = Column(String(100), nullable=True)
+    numero_serie = Column(String(100), nullable=True)
+    fabricante = Column(String(150), nullable=True)
+    fecha_instalacion = Column(Date, nullable=True)
+    ubicacion_coordenadas = Column(JSON, nullable=True)
+    variables_medidas = Column(JSON, nullable=True)
+    frecuencia_lectura_min = Column(Integer, nullable=True)
+    protocolo = Column(String(50), nullable=True)
+    activo = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    finca = relationship("Finca")
+    lote = relationship("Lote")
+
+
+class LecturaSensor(Base):
+    __tablename__ = "lecturas_sensor"
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    sensor_id = Column(Integer, ForeignKey("sensores.id", ondelete="CASCADE"), nullable=False)
+    fecha = Column(DateTime, nullable=False, index=True)
+    variable = Column(String(50), nullable=False, index=True)
+    valor = Column(DECIMAL(12, 4), nullable=False)
+    unidad = Column(String(30), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    sensor = relationship("Sensor")
+
+
+# ============================================================
+# MODELOS FORESTAL
+# ============================================================
+
+class EspecieForestal(Base):
+    __tablename__ = "especies_forestales"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre_comun = Column(String(150), nullable=False)
+    nombre_cientifico = Column(String(200), nullable=True)
+    tipo = Column(String(50), nullable=True)
+    crecimiento_anual_m = Column(DECIMAL(5, 2), nullable=True)
+    densidad_madera = Column(DECIMAL(6, 2), nullable=True)
+    usos = Column(String(255), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class Plantacion(Base):
+    __tablename__ = "plantaciones"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    lote_id = Column(Integer, ForeignKey("lotes.id"), nullable=False)
+    especie_id = Column(Integer, ForeignKey("especies_forestales.id"), nullable=True)
+    especie = Column(String(150), nullable=False)
+    fecha_plantacion = Column(Date, nullable=False)
+    area_ha = Column(DECIMAL(10, 4), nullable=True)
+    densidad_arboles_ha = Column(Integer, nullable=True)
+    total_arboles = Column(Integer, nullable=True)
+    proposito = Column(String(50), nullable=True)
+    estado = Column(String(30), default="establecimiento")
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    lote = relationship("Lote")
+    especie_rel = relationship("EspecieForestal")
+
+
+class CrecimientoForestal(Base):
+    __tablename__ = "crecimientos_forestales"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    plantacion_id = Column(Integer, ForeignKey("plantaciones.id", ondelete="CASCADE"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    altura_promedio_m = Column(DECIMAL(6, 2), nullable=True)
+    diametro_promedio_cm = Column(DECIMAL(6, 2), nullable=True)
+    sobrevivencia_pct = Column(DECIMAL(5, 2), nullable=True)
+    observaciones = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+    plantacion = relationship("Plantacion")
+
+
+# ============================================================
+# MODELOS VETERINARIA - Procedimientos clinicos y quirurgicos
+# ============================================================
+
+class ProcedimientoVeterinario(Base):
+    __tablename__ = "procedimientos_veterinarios"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    animal_id = Column(Integer, ForeignKey("animales.id"), nullable=False)
+    fecha = Column(Date, nullable=False)
+    tipo = Column(Enum("cirugia", "exploracion", "biopsia", "ecografia", "radiografia", "endoscopia", "dental", "emergencia", "otro"), nullable=False)
+    procedimiento_nombre = Column(String(300), nullable=False)
+    descripcion = Column(Text)
+    hallazgos = Column(Text)
+    diagnostico = Column(Text)
+    anestesia = Column(Enum("local", "general", "sedacion", "ninguna"), default="ninguna")
+    anestesico_usado = Column(String(255))
+    dosis_anestesia = Column(String(100))
+    medicamentos_usados = Column(JSON)
+    materiales = Column(JSON)
+    veterinario_principal = Column(String(150))
+    veterinario_asistente = Column(String(150))
+    duracion_minutos = Column(Integer)
+    complicaciones = Column(Text)
+    resultado = Column(Enum("exitoso", "parcial", "fallido", "diferido"), nullable=False)
+    costo = Column(DECIMAL(12, 2))
+    observaciones = Column(Text)
+    seguimiento_recomendado = Column(Text)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    animal = relationship("Animal")
