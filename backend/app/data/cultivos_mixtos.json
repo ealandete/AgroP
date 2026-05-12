@@ -1,0 +1,85 @@
+{
+  "compatibilidades": [
+    {"cultivo1": "coco", "cultivo2": "mango", "compatibilidad": "alta", "notas": "Raíces a diferentes profundidades, buen sombreado"},
+    {"cultivo1": "coco", "cultivo2": "platano", "compatibilidad": "alta", "notas": "El plátano aprovecha sombra del coco"},
+    {"cultivo1": "coco", "cultivo2": "pina", "compatibilidad": "media", "notas": "Competencia por nutrientes, requiere fertilización"},
+    {"cultivo1": "cafe", "cultivo2": "platano", "compatibilidad": "alta", "notas": "Sistema tradicional colombiano, el plátano da sombra"},
+    {"cultivo1": "cafe", "cultivo2": "citricos", "compatibilidad": "media", "notas": "Requiere manejo fitosanitario cuidadoso"},
+    {"cultivo1": "maiz", "cultivo2": "frijol", "compatibilidad": "alta", "notas": "Sistema milpa, el frijol fija nitrógeno"},
+    {"cultivo1": "maiz", "cultivo2": "calabaza", "compatibilidad": "alta", "notas": "La calabaza cubre suelo, reduce malezas"},
+    {"cultivo1": "yuca", "cultivo2": "mani", "compatibilidad": "alta", "notas": "El maní fija nitrógeno, beneficia a la yuca"},
+    {"cultivo1": "pastura", "cultivo2": "arboles", "compatibilidad": "alta", "notas": "Sistema silvopastoril, árboles dan sombra y mejoran suelo"},
+    {"cultivo1": "palma_africana", "cultivo2": "cacao", "compatibilidad": "baja", "notas": "Competencia directa por luz y nutrientes"},
+    {"cultivo1": "tomate", "cultivo2": "albahaca", "compatibilidad": "alta", "notas": "La albahaca repele plagas del tomate"},
+    {"cultivo1": "fresa", "cultivo2": "lechuga", "compatibilidad": "media", "notas": "Ciclos diferentes, optimiza uso del suelo"}
+  ],
+  "suelos_cultivos": [
+    {"cultivo": "coco", "ph_min": 5.0, "ph_max": 8.0, "textura": "arenosa", "altitud_max": 600, "precipitacion_mm": "1500-2500"},
+    {"cultivo": "mango", "ph_min": 5.5, "ph_max": 7.5, "textura": "franca", "altitud_max": 1000, "precipitacion_mm": "750-2500"},
+    {"cultivo": "cafe", "ph_min": 5.0, "ph_max": 6.5, "textura": "franca", "altitud_max": 2000, "precipitacion_mm": "1500-2500"},
+    {"cultivo": "cacao", "ph_min": 6.0, "ph_max": 7.0, "textura": "franca", "altitud_max": 800, "precipitacion_mm": "1500-2500"},
+    {"cultivo": "platano", "ph_min": 5.5, "ph_max": 7.0, "textura": "franca", "altitud_max": 1500, "precipitacion_mm": "2000-4000"},
+    {"cultivo": "palma_africana", "ph_min": 4.5, "ph_max": 6.5, "textura": "franca", "altitud_max": 500, "precipitacion_mm": "1800-2500"},
+    {"cultivo": "maiz", "ph_min": 5.5, "ph_max": 7.5, "textura": "franca", "altitud_max": 2800, "precipitacion_mm": "500-1200"},
+    {"cultivo": "yuca", "ph_min": 5.0, "ph_max": 6.5, "textura": "arenosa", "altitud_max": 1500, "precipitacion_mm": "750-2000"},
+    {"cultivo": "arroz", "ph_min": 5.0, "ph_max": 6.5, "textura": "arcillosa", "altitud_max": 1500, "precipitacion_mm": "1200-2500"},
+    {"cultivo": "papa", "ph_min": 4.8, "ph_max": 6.5, "textura": "franca", "altitud_max": 3500, "precipitacion_mm": "600-1200"},
+    {"cultivo": "frijol", "ph_min": 6.0, "ph_max": 7.5, "textura": "franca", "altitud_max": 2500, "precipitacion_mm": "400-1500"},
+    {"cultivo": "tomate", "ph_min": 5.5, "ph_max": 7.0, "textura": "franca", "altitud_max": 2000, "precipitacion_mm": "400-800"}
+  ],
+  "rendimientos_referencia": {
+    "coco": {"kg_ha": 6000, "ciclo_dias": 1095},
+    "mango": {"kg_ha": 12000, "ciclo_dias": 730},
+    "cafe": {"kg_ha": 1500, "ciclo_dias": 365},
+    "cacao": {"kg_ha": 1000, "ciclo_dias": 365},
+    "platano": {"kg_ha": 18000, "ciclo_dias": 365},
+    "palma_africana": {"kg_ha": 18000, "ciclo_dias": 365},
+    "maiz": {"kg_ha": 5000, "ciclo_dias": 120},
+    "yuca": {"kg_ha": 15000, "ciclo_dias": 300},
+    "arroz": {"kg_ha": 5000, "ciclo_dias": 150},
+    "papa": {"kg_ha": 20000, "ciclo_dias": 150},
+    "frijol": {"kg_ha": 1500, "ciclo_dias": 90},
+    "tomate": {"kg_ha": 40000, "ciclo_dias": 120},
+    "fresa": {"kg_ha": 30000, "ciclo_dias": 240},
+    "lechuga": {"kg_ha": 25000, "ciclo_dias": 60},
+    "albahaca": {"kg_ha": 8000, "ciclo_dias": 90},
+    "mani": {"kg_ha": 2000, "ciclo_dias": 120},
+    "calabaza": {"kg_ha": 20000, "ciclo_dias": 120},
+    "citricos": {"kg_ha": 25000, "ciclo_dias": 365},
+    "pina": {"kg_ha": 45000, "ciclo_dias": 540}
+  },
+  "sistemas_riego": {
+    "goteo": {
+      "nombre": "Goteo",
+      "descripcion": "Sistema de riego localizado de alta eficiencia",
+      "eficiencia": 0.9,
+      "ideal_para": ["tomate", "fresa", "citricos", "cafe", "cacao", "platano", "mango", "aguacate"],
+      "pendiente_max": 15,
+      "costo_ha": 5000000
+    },
+    "aspersion": {
+      "nombre": "Aspersión",
+      "descripcion": "Sistema que simula lluvia, ideal para cultivos densos",
+      "eficiencia": 0.75,
+      "ideal_para": ["maiz", "frijol", "papa", "pastura", "hortalizas", "arroz"],
+      "pendiente_max": 10,
+      "costo_ha": 3500000
+    },
+    "gravedad": {
+      "nombre": "Gravedad (Surcos)",
+      "descripcion": "Sistema tradicional por gravedad en surcos",
+      "eficiencia": 0.5,
+      "ideal_para": ["maiz", "arroz", "cana_azucar", "pastura"],
+      "pendiente_max": 5,
+      "costo_ha": 1500000
+    },
+    "pivote": {
+      "nombre": "Pivote Central",
+      "descripcion": "Sistema mecanizado de riego por aspersión de gran área",
+      "eficiencia": 0.85,
+      "ideal_para": ["maiz", "papa", "arroz", "hortalizas", "pastura"],
+      "pendiente_max": 3,
+      "costo_ha": 8000000
+    }
+  }
+}

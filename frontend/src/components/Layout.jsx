@@ -13,8 +13,9 @@ import {
   IconUsers, IconUsersGroup, IconHealthRecognition, IconCalendarEvent, IconClipboardList,
   IconBuildingEstate, IconCheck, IconReportAnalytics, IconFileSpreadsheet,
   IconSearch, IconAlertTriangle, IconMail, IconMedicineSyrup, IconTractor,
-  IconShield, IconCertificate, IconDroplet, IconApple, IconQrcode, IconFish,
+  IconShield, IconShieldCheck, IconCertificate, IconDroplet, IconApple, IconQrcode, IconFish,
   IconStethoscope, IconBulldozer, IconDeviceSdCard, IconTree,
+  IconBulb,
 } from '@tabler/icons-react'
 import { useAuth } from '../store/AuthContext.jsx'
 import { useModo } from '../store/ModoContext.jsx'
@@ -58,7 +59,9 @@ const NAV_ITEMS = [
   { label: 'Certificaciones', icon: IconCertificate, to: '/certificaciones', section: 'gestion' },
   { label: 'Trazabilidad', icon: IconSearch, to: '/trazabilidad', section: 'gestion' },
   { label: 'Estadísticas', icon: IconChartBar, to: '/estadisticas', section: 'analisis' },
+  { label: 'Recomendaciones', icon: IconBulb, to: '/recomendaciones', section: 'analisis' },
   { label: 'Reportes', icon: IconFileDownload, to: '/exportar', section: 'analisis' },
+  { label: 'Cumplimiento', icon: IconShieldCheck, to: '/cumplimiento', section: 'sistema' },
   { label: 'Admin Sistema', icon: IconSettings, to: '/admin-sistema', section: 'sistema' },
   { label: 'Configuración', icon: IconSettings, to: '/configuracion', section: 'sistema' },
 ]
@@ -127,6 +130,8 @@ const ROUTE_NAMES = {
   '/suelos': 'Suelos/Análisis',
   '/sensores': 'Sensores',
   '/forestal': 'Forestal',
+  '/recomendaciones': 'Recomendaciones',
+  '/cumplimiento': 'Cumplimiento Normativo',
 }
 
 export default function Layout() {

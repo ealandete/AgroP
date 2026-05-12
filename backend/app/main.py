@@ -32,6 +32,8 @@ from app.routers.suelos import router as suelos_router
 from app.routers.sensores import router as sensores_router
 from app.routers.forestal import router as forestal_router
 from app.routers import procedimientos
+from app.routers.recomendaciones import router as recomendaciones_router
+from app.routers.cumplimiento import router as cumplimiento_router
 
 tags_metadata = [
     {"name": "Autenticacion", "description": "Login, registro, tokens"},
@@ -54,6 +56,7 @@ tags_metadata = [
     {"name": "Suelos / Analisis", "description": "Analisis de suelo, recomendaciones de fertilizacion y cultivos"},
     {"name": "Sensores / Estaciones", "description": "Sensores IoT, estaciones meteorologicas y lecturas"},
     {"name": "Forestal / Plantaciones", "description": "Plantaciones forestales, crecimiento y monitoreo"},
+    {"name": "Cumplimiento Normativo", "description": "Gestion de cumplimiento legal y normativo ICA, DIAN, laboral, ambiental y municipal"},
 ]
 
 app = FastAPI(
@@ -164,6 +167,8 @@ app.include_router(suelos_router)
 app.include_router(sensores_router)
 app.include_router(forestal_router)
 app.include_router(procedimientos.router)
+app.include_router(recomendaciones_router)
+app.include_router(cumplimiento_router)
 
 
 @app.get("/api/health")

@@ -45,6 +45,8 @@ import Procedimientos from './pages/Procedimientos.jsx'
 import Suelos from './pages/Suelos.jsx'
 import Sensores from './pages/Sensores.jsx'
 import Forestal from './pages/Forestal.jsx'
+import Recomendaciones from './pages/Recomendaciones.jsx'
+import Cumplimiento from './pages/Cumplimiento.jsx'
 import InicioPropietario from './pages/InicioPropietario.jsx'
 import InicioCapataz from './pages/InicioCapataz.jsx'
 import InicioVeterinario from './pages/InicioVeterinario.jsx'
@@ -121,6 +123,8 @@ export default function App() {
           <Route path="suelos" element={<Suelos />} />
           <Route path="sensores" element={<Sensores />} />
           <Route path="forestal" element={<Forestal />} />
+          <Route path="recomendaciones" element={<Recomendaciones />} />
+          <Route path="cumplimiento" element={<Cumplimiento />} />
           <Route path="inicio-propietario" element={<InicioPropietario />} />
           <Route path="inicio-capataz" element={<InicioCapataz />} />
           <Route path="inicio-veterinario" element={<InicioVeterinario />} />
